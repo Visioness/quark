@@ -2,7 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import passport from 'passport';
 import LocalStrategy from './auth/strategy.js';
-import { router as apiRouter } from './routes/apiRouter.js';
+import { router as apiRouter } from './routes/api.js';
 
 const app = express();
 
