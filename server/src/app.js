@@ -1,10 +1,13 @@
 import 'dotenv/config';
 import express from 'express';
+import cookieParser from 'cookie-parser';
 import passport from 'passport';
-import LocalStrategy from './auth/strategy.js';
+import { LocalStrategy } from './auth/strategy.js';
 import { router as apiRouter } from './routes/api.js';
 
 const app = express();
+
+app.use(cookieParser());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
