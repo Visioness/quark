@@ -1,11 +1,19 @@
 import 'dotenv/config';
 import express from 'express';
+import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import passport from 'passport';
 import { LocalStrategy } from './auth/strategy.js';
 import { router as apiRouter } from './routes/api.js';
 
 const app = express();
+
+app.use(
+  cors({
+    origin: 'http://localhost:5173',
+    credentials: true,
+  })
+);
 
 app.use(cookieParser());
 
