@@ -3,7 +3,7 @@ export const ThemeOption = ({ onClick, children }) => {
     <button
       onClick={onClick}
       type='button'
-      className='flex justify-center items-center w-9 h-9 cursor-pointer'>
+      className='flex justify-center items-center w-full h-full cursor-pointer hover:bg-secondary transition-colors'>
       {children}
     </button>
   );
