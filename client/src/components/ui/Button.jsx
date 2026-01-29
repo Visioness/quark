@@ -29,7 +29,7 @@ export const Button = ({
   return (
     <button
       type={type ?? 'button'}
-      disabled={disabled}
+      disabled={loading || disabled}
       onClick={onClick}
       className={`button flex justify-center items-center cursor-pointer transition-colors disabled:bg-muted disabled:text-muted-foreground disabled:pointer-events-none ${variantClass} ${sizeClass} ${extra} ${
         type === 'submit' ? 'w-full' : ''

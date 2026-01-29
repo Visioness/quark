@@ -41,11 +41,7 @@ export const LogInForm = () => {
 
       <AuthError error={error?.global} />
 
-      <Button
-        type='submit'
-        size='md'
-        loading={loading}
-        disabled={buttonDisabled}>
+      <Button type='submit' loading={loading} disabled={buttonDisabled}>
         Log In
       </Button>
     </form>

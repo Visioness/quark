@@ -7,7 +7,7 @@ const sizes = {
 };
 
 export const LoadingSpinner = ({ size }) => {
-  const sizeClass = sizes[size] ?? sizes.md;
+  const sizeClass = sizes[size] ?? 'h-full';
 
   return (
     <div

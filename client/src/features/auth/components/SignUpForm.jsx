@@ -65,11 +65,7 @@ export const SignUpForm = () => {
 
       <AuthError error={error?.global} />
 
-      <Button
-        type='submit'
-        size='md'
-        loading={loading}
-        disabled={buttonDisabled}>
+      <Button type='submit' loading={loading} disabled={buttonDisabled}>
         Sign Up
       </Button>
     </form>
