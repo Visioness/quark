@@ -1,7 +1,13 @@
-import { Link } from 'react-router';
+import { Link, Navigate } from 'react-router';
 import { SignUpForm } from '@/features/auth/components';
+import { useAuth } from '@/features/auth/context';
 
 export const SignUpPage = () => {
+  const { isAuthenticated } = useAuth();
+
+  if (isAuthenticated) {
+    return <Navigate to='/' replace />;
+  }
   return (
     <div className='min-h-screen flex items-center justify-center bg-background text-foreground'>
       <div className='px-6 py-4 sm:p-8 border rounded-lg shadow-sm bg-card text-card-foreground border-border w-full max-w-xs sm:max-w-md'>

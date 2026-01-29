@@ -5,6 +5,28 @@
     <link rel="icon" type="image/svg+xml" href="/quarklight.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Quark</title>
+    <script>
+      (function () {
+        const theme =
+          localStorage.getItem('vite-ui-theme') ||
+          (window.matchMedia('(prefers-color-scheme: dark)').matches
+            ? 'dark'
+            : 'light');
+
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
+    <style>
+      body {
+        margin: 0;
+        background-color: oklch(1 0 0);
+      }
+      .dark body {
+        background-color: oklch(0.141 0.005 285.823);
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

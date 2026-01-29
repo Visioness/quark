@@ -31,9 +31,7 @@ export const LandingPage = () => {
         </div>
       </header>
 
-      {/* Hero Section */}
       <main className='flex-1 flex flex-col items-center justify-center p-8 text-center relative overflow-hidden'>
-        {/* Background Decorative Elements */}
         <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl -z-10' />
 
         <div className='max-w-3xl space-y-8 relative z-10'>
@@ -67,7 +65,6 @@ export const LandingPage = () => {
         </div>
       </main>
 
-      {/* Footer */}
       <footer className='py-8 border-t border-border bg-card/30'>
         <div className='container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground'>
           <p>&copy; {new Date().getFullYear()} Quark. All rights reserved.</p>
@@ -78,7 +75,10 @@ export const LandingPage = () => {
             <a href='#' className='hover:text-foreground transition-colors'>
               Terms
             </a>
-            <a href='#' className='hover:text-foreground transition-colors'>
+            <a
+              href='https://github.com/Visioness'
+              target='_blank'
+              className='hover:text-foreground transition-colors'>
               GitHub
             </a>
           </div>

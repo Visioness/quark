@@ -1,14 +1,11 @@
 import { Navigate, Outlet } from 'react-router';
-// import { useAuth } from '../hooks/useAuth'; // TODO: Implement Auth Hook later
+import { useAuth } from '@/features/auth/context/AuthContext';
+import { LoadingPage } from '@/pages';
 
 export const ProtectedRoute = () => {
-  // Mock Auth for testing UI
-  const user = { name: 'Test User' };
-  // const user = null; // Toggle this to test redirect
+  const { isAuthenticated, loading } = useAuth();
 
-  if (!user) {
-    return <Navigate to='/auth/log-in' replace />;
-  }
+  if (loading) return <LoadingPage />;
 
-  return <Outlet />;
+  return isAuthenticated ? <Outlet /> : <Navigate to='/welcome' replace />;
 };

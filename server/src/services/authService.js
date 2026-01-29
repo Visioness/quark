@@ -78,7 +78,11 @@ const refreshAccessToken = async (refreshToken) => {
   const decoded = jwt.verify(refreshToken, process.env.REFRESH_SECRET);
   const accessToken = generateAccessToken({ userId: decoded.userId });
 
-  return { accessToken };
+  const { password, ...userWithoutPassword } = await userModel.findUserById(
+    decoded.userId
+  );
+
+  return { accessToken, user: userWithoutPassword };
 };
 
 export {

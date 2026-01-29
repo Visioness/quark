@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router';
 
 const validations = {
   username: {
@@ -43,7 +44,8 @@ const validations = {
   },
 };
 
-export const useForm = (initialForm) => {
+export const useForm = ({ initialForm, apiCall }) => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState(initialForm);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -100,12 +102,13 @@ export const useForm = (initialForm) => {
       setLoading(true);
 
       // Mock API call
-      const result = await new Promise((resolve) =>
-        setTimeout(() => resolve({ success: true, message: 'Mock data' }), 2000)
-      );
+      const result = await apiCall(formData);
 
       // Validation errors from the server
-      if (!result.success) {
+      if (result.success) {
+        setError(null);
+        navigate('/');
+      } else {
         if (result.errors && Array.isArray(result.errors)) {
           const errors = initialForm;
           result.errors.forEach((error) => {
@@ -115,9 +118,6 @@ export const useForm = (initialForm) => {
         } else {
           setError({ global: result.message });
         }
-      } else {
-        setError(null);
-        // TODO: Set user and accessToken
       }
     } catch (error) {
       setError({ global: error.message });
