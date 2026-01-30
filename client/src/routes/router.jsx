@@ -3,6 +3,7 @@ import { LandingPage, LogInPage, SignUpPage } from '@/pages';
 import { ProtectedRoute } from '@/features/auth/components';
 import { AppLayout } from '@/components/layout';
 import { RecentChats } from '@/features/chat/components';
+import { Profile } from '@/features/profile/components';
 
 export const router = createBrowserRouter([
   {
@@ -27,6 +28,10 @@ export const router = createBrowserRouter([
           {
             index: true,
             element: <RecentChats />,
+          },
+          {
+            path: 'profile',
+            element: <Profile />,
           },
         ],
       },

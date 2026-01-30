@@ -4,13 +4,13 @@ const variants = {
   primary: 'bg-primary text-primary-foreground border border-border',
   secondary:
     'bg-card text-secondary-foreground border border-border hover:bg-secondary',
-  transparent: 'text-foreground',
+  transparent: 'text-foreground hover:bg-muted border border-border',
 };
 
 const sizes = {
-  sm: 'px-2 py-1 rounded-lg text-sm',
-  md: 'px-4 py-2 rounded-xl text-base',
-  lg: 'px-8 py-4 rounded-2xl text-lg',
+  sm: 'px-2 py-1 text-sm',
+  md: 'px-4 py-2 text-base',
+  lg: 'px-8 py-4 text-lg',
 };
 
 export const Button = ({
