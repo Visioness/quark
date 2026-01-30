@@ -27,8 +27,14 @@ const registerUser = async ({ username, email, password }) => {
     password: hashedPassword,
   });
 
-  const accessToken = generateAccessToken({ userId: user.id });
-  const refreshToken = generateRefreshToken({ userId: user.id });
+  const accessToken = generateAccessToken({
+    userId: user.id,
+    username: user.username,
+  });
+  const refreshToken = generateRefreshToken({
+    userId: user.id,
+    username: user.username,
+  });
 
   await tokenModel.storeToken(user.id, refreshToken);
 
@@ -54,8 +60,14 @@ const loginUser = async ({ username, password }) => {
     throw error;
   }
 
-  const accessToken = generateAccessToken({ userId: user.id });
-  const refreshToken = generateRefreshToken({ userId: user.id });
+  const accessToken = generateAccessToken({
+    userId: user.id,
+    username: user.username,
+  });
+  const refreshToken = generateRefreshToken({
+    userId: user.id,
+    username: user.username,
+  });
 
   await tokenModel.storeToken(user.id, refreshToken);
 
@@ -76,7 +88,10 @@ const refreshAccessToken = async (refreshToken) => {
   await tokenModel.isTokenValid(refreshToken);
 
   const decoded = jwt.verify(refreshToken, process.env.REFRESH_SECRET);
-  const accessToken = generateAccessToken({ userId: decoded.userId });
+  const accessToken = generateAccessToken({
+    userId: decoded.userId,
+    username: decoded.username,
+  });
 
   const { password, ...userWithoutPassword } = await userModel.findUserById(
     decoded.userId
