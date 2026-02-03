@@ -23,6 +23,11 @@ model User {
   updatedAt DateTime      @updatedAt
 
   refreshTokens RefreshToken[]
+
+  sentRequests     FriendRequest[] @relation("sender")
+  receivedRequests FriendRequest[] @relation("receiver")
+  friends          User[]          @relation("UserFriends")
+  symmetricFriends User[]          @relation("UserFriends")
 }
 
 model RefreshToken {
@@ -35,7 +40,26 @@ model RefreshToken {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
 
+model FriendRequest {
+  id         String        @id @default(cuid(2))
+  senderId   String
+  receiverId String
+  status     RequestStatus @default(PENDING)
+  createdAt  DateTime      @default(now())
+
+  sender   User @relation("sender", fields: [senderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  receiver User @relation("receiver", fields: [receiverId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([senderId, receiverId])
+}
+
 enum ProfileStatus {
   PUBLIC
   HIDDEN
+}
+
+enum RequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
 }
