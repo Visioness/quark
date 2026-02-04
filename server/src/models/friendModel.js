@@ -24,6 +24,13 @@ const getPendingRequests = async (receiverId) => {
       receiverId,
       status: 'PENDING',
     },
+    include: {
+      sender: {
+        select: {
+          username: true,
+        },
+      },
+    },
   });
 };
 

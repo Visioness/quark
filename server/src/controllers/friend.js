@@ -37,6 +37,12 @@ const sendFriendRequest = async (req, res, next) => {
     const receiverUsername = req.params.username;
     const senderId = req.user.userId;
 
+    if (receiverUsername === req.user.username) {
+      const error = new Error('Can not send request to yourself.');
+      error.statusCode = 400;
+      throw error;
+    }
+
     const friendRequest = await friendService.sendFriendRequest(
       senderId,
       receiverUsername
