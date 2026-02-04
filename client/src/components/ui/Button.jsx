@@ -4,7 +4,8 @@ const variants = {
   primary: 'bg-primary text-primary-foreground border border-border',
   secondary:
     'bg-card text-secondary-foreground border border-border hover:bg-secondary',
-  transparent: 'text-foreground hover:bg-muted border border-border',
+  transparent: 'text-foreground',
+  destructive: 'text-destructive hover:bg-muted border border-border',
 };
 
 const sizes = {
@@ -31,9 +32,7 @@ export const Button = ({
       type={type ?? 'button'}
       disabled={loading || disabled}
       onClick={onClick}
-      className={`button flex justify-center items-center cursor-pointer transition-colors disabled:bg-muted disabled:text-muted-foreground disabled:pointer-events-none ${variantClass} ${sizeClass} ${extra} ${
-        type === 'submit' ? 'w-full' : ''
-      } `}>
+      className={`button flex justify-center items-center cursor-pointer transition-colors disabled:bg-muted disabled:text-muted-foreground disabled:pointer-events-none ${variantClass} ${sizeClass} ${extra}`}>
       {loading ? <LoadingSpinner size={size} /> : children}
     </button>
   );

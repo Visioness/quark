@@ -1,9 +1,10 @@
 import { createBrowserRouter } from 'react-router';
 import { LandingPage, LogInPage, SignUpPage } from '@/pages';
 import { ProtectedRoute } from '@/features/auth/components';
-import { AppLayout } from '@/components/layout';
+import { AppLayout, FriendsLayout } from '@/components/layout';
 import { RecentChats } from '@/features/chat/components';
 import { Profile } from '@/features/profile/components';
+import { Friends, Requests } from '@/features/friends/components';
 
 export const router = createBrowserRouter([
   {
@@ -32,6 +33,20 @@ export const router = createBrowserRouter([
           {
             path: 'profile',
             element: <Profile />,
+          },
+          {
+            path: 'friends',
+            element: <FriendsLayout />,
+            children: [
+              {
+                index: true,
+                element: <Friends />,
+              },
+              {
+                path: 'requests',
+                element: <Requests />,
+              },
+            ],
           },
         ],
       },
