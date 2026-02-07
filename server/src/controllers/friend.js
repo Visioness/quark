@@ -35,9 +35,9 @@ const getFriendRequests = async (req, res, next) => {
 const sendFriendRequest = async (req, res, next) => {
   try {
     const senderId = req.user.id;
-    const receiverUsername = req.params.username;
+    const { username } = req.params;
 
-    if (receiverUsername === req.user.username) {
+    if (username === req.user.username) {
       const error = new Error('Can not send request to yourself.');
       error.statusCode = 400;
       throw error;
@@ -45,12 +45,12 @@ const sendFriendRequest = async (req, res, next) => {
 
     const friendRequest = await friendService.sendFriendRequest(
       senderId,
-      receiverUsername
+      username
     );
 
-    let message = `Friend request sent to ${receiverUsername}.`;
+    let message = `Friend request sent to ${friendRequest.receiver.username}.`;
     if (friendRequest.status === 'ACCEPTED') {
-      message = `You are now friends with ${receiverUsername}.`;
+      message = `You are now friends with ${friendRequest.sender.username}.`;
     }
 
     res.json({
@@ -66,13 +66,16 @@ const sendFriendRequest = async (req, res, next) => {
 const acceptFriendRequest = async (req, res, next) => {
   try {
     const receiverId = req.user.id;
-    const senderUsername = req.params.username;
+    const { senderId } = req.params;
 
-    await friendService.acceptFriendRequest(senderUsername, receiverId);
+    const friendRequest = await friendService.acceptFriendRequest(
+      senderId,
+      receiverId
+    );
 
     res.json({
       success: true,
-      message: `You are now friends with ${senderUsername}.`,
+      message: `You are now friends with ${friendRequest.sender.username}.`,
     });
   } catch (error) {
     next(error);
@@ -82,13 +85,16 @@ const acceptFriendRequest = async (req, res, next) => {
 const rejectFriendRequest = async (req, res, next) => {
   try {
     const receiverId = req.user.id;
-    const senderUsername = req.params.username;
+    const { senderId } = req.params;
 
-    await friendService.rejectFriendRequest(senderUsername, receiverId);
+    const friendRequest = await friendService.rejectFriendRequest(
+      senderId,
+      receiverId
+    );
 
     res.json({
       success: true,
-      message: `Rejected friend request from ${senderUsername}.`,
+      message: `Rejected friend request from ${friendRequest.sender.username}.`,
     });
   } catch (error) {
     next(error);
@@ -98,13 +104,13 @@ const rejectFriendRequest = async (req, res, next) => {
 const removeFriend = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const friendUsername = req.params.username;
+    const { friendId } = req.params;
 
-    await friendService.removeFriend(userId, friendUsername);
+    const friend = await friendService.removeFriend(userId, friendId);
 
     res.json({
       success: true,
-      message: `Removed ${friendUsername} from friend list.`,
+      message: `Removed ${friend.username} from friend list.`,
     });
   } catch (error) {
     next(error);

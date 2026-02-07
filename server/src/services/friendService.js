@@ -9,8 +9,8 @@ const getFriendRequests = async (userId) => {
   return await friendModel.getPendingRequests(userId);
 };
 
-const sendFriendRequest = async (senderId, receiverUsername) => {
-  const receiver = await userModel.findUserByUsername(receiverUsername);
+const sendFriendRequest = async (senderId, username) => {
+  const receiver = await userModel.findUserByUsername(username);
 
   if (!receiver) {
     const error = new Error('User not found.');
@@ -24,31 +24,38 @@ const sendFriendRequest = async (senderId, receiverUsername) => {
   );
 
   if (existingFriendRequest) {
-    if (existingFriendRequest.status === 'PENDING') {
-      if (existingFriendRequest.receiverId === senderId) {
-        await friendModel.addFriendship(senderId, receiver.id);
-        return await friendModel.acceptRequest(existingFriendRequest.id);
-      } else {
-        const error = new Error(
-          'You have already sent a friend request to that user.'
-        );
+    switch (existingFriendRequest.status) {
+      case 'PENDING': {
+        if (existingFriendRequest.receiverId === senderId) {
+          await friendModel.addFriendship(senderId, receiver.id);
+          return await friendModel.acceptRequest(existingFriendRequest.id);
+        } else {
+          const error = new Error(
+            'You have already sent a friend request to that user.'
+          );
+          error.statusCode = 409;
+          throw error;
+        }
+      }
+
+      case 'ACCEPTED': {
+        const error = new Error('You are already friends with that user.');
         error.statusCode = 409;
         throw error;
       }
-    } else if (existingFriendRequest.status === 'ACCEPTED') {
-      const error = new Error('You are already friends with that user.');
-      error.statusCode = 409;
-      throw error;
-    } else {
-      await friendModel.deleteRequest(existingFriendRequest.id);
+
+      case 'REJECTED': {
+        await friendModel.deleteRequest(existingFriendRequest.id);
+        return await friendModel.sendRequest(senderId, receiver.id);
+      }
     }
   }
 
   return await friendModel.sendRequest(senderId, receiver.id);
 };
 
-const acceptFriendRequest = async (senderUsername, receiverId) => {
-  const sender = await userModel.findUserByUsername(senderUsername);
+const acceptFriendRequest = async (senderId, receiverId) => {
+  const sender = await userModel.findUserById(senderId);
 
   if (!sender) {
     const error = new Error('User not found.');
@@ -57,7 +64,7 @@ const acceptFriendRequest = async (senderUsername, receiverId) => {
   }
 
   const existingFriendRequest = await friendModel.findRequest(
-    sender.id,
+    senderId,
     receiverId
   );
 
@@ -67,12 +74,12 @@ const acceptFriendRequest = async (senderUsername, receiverId) => {
     throw error;
   }
 
-  await friendModel.addFriendship(sender.id, receiverId);
-  await friendModel.acceptRequest(existingFriendRequest.id);
+  await friendModel.addFriendship(senderId, receiverId);
+  return await friendModel.acceptRequest(existingFriendRequest.id);
 };
 
-const rejectFriendRequest = async (senderUsername, receiverId) => {
-  const sender = await userModel.findUserByUsername(senderUsername);
+const rejectFriendRequest = async (senderId, receiverId) => {
+  const sender = await userModel.findUserById(senderId);
 
   if (!sender) {
     const error = new Error('User not found.');
@@ -81,7 +88,7 @@ const rejectFriendRequest = async (senderUsername, receiverId) => {
   }
 
   const existingFriendRequest = await friendModel.findRequest(
-    sender.id,
+    senderId,
     receiverId
   );
 
@@ -91,11 +98,11 @@ const rejectFriendRequest = async (senderUsername, receiverId) => {
     throw error;
   }
 
-  await friendModel.rejectRequest(existingFriendRequest.id);
+  return await friendModel.rejectRequest(existingFriendRequest.id);
 };
 
-const removeFriend = async (userId, friendUsername) => {
-  const friend = await userModel.findUserByUsername(friendUsername);
+const removeFriend = async (userId, friendId) => {
+  const friend = await userModel.findUserById(friendId);
 
   if (!friend) {
     const error = new Error('User not found.');
@@ -103,10 +110,7 @@ const removeFriend = async (userId, friendUsername) => {
     throw error;
   }
 
-  const existingFriendship = await friendModel.findFriendship(
-    userId,
-    friend.id
-  );
+  const existingFriendship = await friendModel.findFriendship(userId, friendId);
 
   if (!existingFriendship) {
     const error = new Error('Friend not found.');
@@ -120,6 +124,8 @@ const removeFriend = async (userId, friendUsername) => {
   }
 
   await friendModel.removeFriendship(userId, friend.id);
+
+  return friend;
 };
 
 export {

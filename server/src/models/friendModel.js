@@ -6,6 +6,7 @@ const getFriends = async (id) => {
     select: {
       friends: {
         select: {
+          id: true,
           username: true,
         },
         orderBy: {
@@ -62,6 +63,18 @@ const sendRequest = async (senderId, receiverId) => {
       senderId,
       receiverId,
     },
+    select: {
+      sender: {
+        select: {
+          username: true,
+        },
+      },
+      receiver: {
+        select: {
+          username: true,
+        },
+      },
+    },
   });
 };
 
@@ -73,6 +86,18 @@ const acceptRequest = async (id) => {
     data: {
       status: 'ACCEPTED',
     },
+    select: {
+      sender: {
+        select: {
+          username: true,
+        },
+      },
+      receiver: {
+        select: {
+          username: true,
+        },
+      },
+    },
   });
 };
 
@@ -83,6 +108,18 @@ const rejectRequest = async (id) => {
     },
     data: {
       status: 'REJECTED',
+    },
+    select: {
+      sender: {
+        select: {
+          username: true,
+        },
+      },
+      receiver: {
+        select: {
+          username: true,
+        },
+      },
     },
   });
 };
