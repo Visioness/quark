@@ -28,19 +28,16 @@ export const Friends = () => {
     fetchFriends();
   }, [accessToken]);
 
-  // Handler for removing a friend
-  const handleRemove = async (username) => {
-    setRemovingFriend(username);
+  const handleRemove = async (friendId) => {
+    setRemovingFriend(friendId);
     try {
-      const result = await removeFriend(username, accessToken);
+      const result = await removeFriend(friendId, accessToken);
       if (result.success) {
-        // Remove the friend from the list
         setFriendList((prev) =>
-          prev.filter((friend) => friend.username !== username)
+          prev.filter((friend) => friend.id !== friendId)
         );
       }
     } catch (error) {
-      console.error('Failed to remove friend:', error);
       setError(error);
     } finally {
       setRemovingFriend(null);
@@ -93,9 +90,9 @@ export const Friends = () => {
                           variant='transparent'
                           size='sm'
                           extra='w-9 h-9 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive border-transparent'
-                          loading={removingFriend === friend.username}
+                          loading={removingFriend === friend.id}
                           disabled={removingFriend !== null}
-                          onClick={() => handleRemove(friend.username)}>
+                          onClick={() => handleRemove(friend.id)}>
                           <UserMinus className='w-4 h-4' />
                         </Button>
                       </div>

@@ -33,34 +33,32 @@ export const Requests = () => {
     fetchFriendRequests();
   }, [accessToken]);
 
-  const handleAccept = async (username) => {
-    setProcessingRequest(username);
+  const handleAccept = async (senderId) => {
+    setProcessingRequest(senderId);
     try {
-      const result = await acceptFriendRequest(username, accessToken);
+      const result = await acceptFriendRequest(senderId, accessToken);
       if (result.success) {
         setFriendRequests((prev) =>
-          prev.filter((request) => request.sender.username !== username)
+          prev.filter((request) => request.senderId !== senderId)
         );
       }
     } catch (error) {
-      console.error('Failed to accept friend request:', error);
       setError(error);
     } finally {
       setProcessingRequest(null);
     }
   };
 
-  const handleDecline = async (username) => {
-    setProcessingRequest(username);
+  const handleDecline = async (senderId) => {
+    setProcessingRequest(senderId);
     try {
-      const result = await rejectFriendRequest(username, accessToken);
+      const result = await rejectFriendRequest(senderId, accessToken);
       if (result.success) {
         setFriendRequests((prev) =>
-          prev.filter((request) => request.sender.username !== username)
+          prev.filter((request) => request.senderId !== senderId)
         );
       }
     } catch (error) {
-      console.error('Failed to reject friend request:', error);
       setError(error);
     } finally {
       setProcessingRequest(null);
@@ -94,7 +92,7 @@ export const Requests = () => {
                 <ul className='space-y-2'>
                   {friendRequests.map((request) => (
                     <li
-                      key={request.sender.username}
+                      key={request.senderId}
                       className='group flex justify-between items-center p-3 rounded-xl bg-card border border-border/50 shadow-sm hover:shadow-md transition-all duration-200'>
                       <div className='flex items-center gap-3'>
                         <div className='w-10 h-10 rounded-full bg-secondary/80 flex items-center justify-center border border-border/50 text-secondary-foreground'>
@@ -115,11 +113,9 @@ export const Requests = () => {
                           variant='transparent'
                           size='sm'
                           extra='w-9 h-9 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/20'
-                          loading={
-                            processingRequest === request.sender.username
-                          }
+                          loading={processingRequest === request.senderId}
                           disabled={processingRequest !== null}
-                          onClick={() => handleAccept(request.sender.username)}>
+                          onClick={() => handleAccept(request.senderId)}>
                           <Check
                             className='w-4 h-4 text-emerald-500/80'
                             strokeWidth={2.5}
@@ -129,13 +125,9 @@ export const Requests = () => {
                           variant='transparent'
                           size='sm'
                           extra='w-9 h-9 rounded-full bg-destructive/10 hover:bg-destructive/20 border-destructive/20'
-                          loading={
-                            processingRequest === request.sender.username
-                          }
+                          loading={processingRequest === request.senderId}
                           disabled={processingRequest !== null}
-                          onClick={() =>
-                            handleDecline(request.sender.username)
-                          }>
+                          onClick={() => handleDecline(request.senderId)}>
                           <X
                             className='w-4 h-4 text-destructive/80'
                             strokeWidth={2.5}

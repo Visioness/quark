@@ -16,25 +16,25 @@ export const sendFriendRequest = async (username, accessToken) => {
   );
 };
 
-export const acceptFriendRequest = async (username, accessToken) => {
+export const acceptFriendRequest = async (senderId, accessToken) => {
   return await request(
-    `/friends/requests/${username}/accept`,
+    `/friends/requests/${senderId}/accept`,
     { method: 'PUT' },
     accessToken
   );
 };
 
-export const rejectFriendRequest = async (username, accessToken) => {
+export const rejectFriendRequest = async (senderId, accessToken) => {
   return await request(
-    `/friends/requests/${username}/reject`,
+    `/friends/requests/${senderId}/reject`,
     { method: 'PUT' },
     accessToken
   );
 };
 
-export const removeFriend = async (username, accessToken) => {
+export const removeFriend = async (friendId, accessToken) => {
   return await request(
-    `/friends/${username}`,
+    `/friends/${friendId}`,
     { method: 'DELETE' },
     accessToken
   );
