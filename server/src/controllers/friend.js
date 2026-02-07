@@ -2,7 +2,7 @@ import * as friendService from '../services/friendService.js';
 
 const getFriends = async (req, res, next) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.user.id;
 
     const friends = await friendService.getFriends(userId);
 
@@ -18,7 +18,7 @@ const getFriends = async (req, res, next) => {
 
 const getFriendRequests = async (req, res, next) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.user.id;
 
     const friendRequests = await friendService.getFriendRequests(userId);
 
@@ -34,8 +34,8 @@ const getFriendRequests = async (req, res, next) => {
 
 const sendFriendRequest = async (req, res, next) => {
   try {
+    const senderId = req.user.id;
     const receiverUsername = req.params.username;
-    const senderId = req.user.userId;
 
     if (receiverUsername === req.user.username) {
       const error = new Error('Can not send request to yourself.');
@@ -65,8 +65,8 @@ const sendFriendRequest = async (req, res, next) => {
 
 const acceptFriendRequest = async (req, res, next) => {
   try {
+    const receiverId = req.user.id;
     const senderUsername = req.params.username;
-    const receiverId = req.user.userId;
 
     await friendService.acceptFriendRequest(senderUsername, receiverId);
 
@@ -81,8 +81,8 @@ const acceptFriendRequest = async (req, res, next) => {
 
 const rejectFriendRequest = async (req, res, next) => {
   try {
+    const receiverId = req.user.id;
     const senderUsername = req.params.username;
-    const receiverId = req.user.userId;
 
     await friendService.rejectFriendRequest(senderUsername, receiverId);
 
@@ -97,8 +97,8 @@ const rejectFriendRequest = async (req, res, next) => {
 
 const removeFriend = async (req, res, next) => {
   try {
+    const userId = req.user.id;
     const friendUsername = req.params.username;
-    const userId = req.user.userId;
 
     await friendService.removeFriend(userId, friendUsername);
 

@@ -97,7 +97,7 @@ const logOutAllSessions = async (req, res, next) => {
   }
 
   try {
-    await authService.logOutAllSessions(req.user.userId);
+    await authService.logOutAllSessions(req.user.id);
 
     res.clearCookie('refreshToken');
 
