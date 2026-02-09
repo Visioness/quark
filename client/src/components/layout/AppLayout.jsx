@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router';
-import { LogOut, Menu, X } from 'lucide-react';
+import { LogOut, Menu, X, UserRound, UsersRound } from 'lucide-react';
 import { ThemeToggler } from '@/features/theme/components';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import { useSocket } from '@/features/chat/context';
 import { Button } from '@/components/ui';
 
 export const AppLayout = () => {
   const { user, logout } = useAuth();
+  const { conversations } = useSocket();
   const [showSidebar, setShowSidebar] = useState(false);
 
   const handleLogOut = async () => {
@@ -33,18 +35,6 @@ export const AppLayout = () => {
         </div>
         <nav className='flex-1 flex flex-col p-4 space-y-2'>
           <NavLink
-            to='/'
-            onClick={() => setShowSidebar(false)}
-            className={({ isActive }) =>
-              `p-2 rounded-xl cursor-pointer ${
-                isActive
-                  ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                  : 'hover:bg-sidebar-accent/50'
-              }`
-            }>
-            Recent Chats
-          </NavLink>
-          <NavLink
             to='/friends'
             onClick={() => setShowSidebar(false)}
             className={({ isActive }) =>
@@ -68,6 +58,45 @@ export const AppLayout = () => {
             }>
             Profile
           </NavLink>
+          {conversations.length > 0 && (
+            <div className='mt-4 pt-4 border-t border-border'>
+              <div className='text-xs font-semibold text-muted-foreground mb-2 px-2'>
+                Conversations
+              </div>
+              {conversations.map((conversation) => (
+                <NavLink
+                  key={conversation.id}
+                  to={`/chat/${conversation.id}`}
+                  onClick={() => setShowSidebar(false)}
+                  className={({ isActive }) =>
+                    `px-2 py-2 rounded-xl cursor-pointer flex items-center gap-6 ${
+                      isActive
+                        ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                        : 'hover:bg-sidebar-accent/50'
+                    }`
+                  }>
+                  <div className='conversation-avatar relative w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium border border-primary/20'>
+                    {conversation.type === 'PRIVATE' ? (
+                      <UserRound />
+                    ) : (
+                      <UsersRound />
+                    )}
+                    {conversation.unread > 0 && (
+                      <span className='absolute bottom-0 -right-3 px-1 min-w-5 flex justify-center items-center bg-destructive text-primary-foreground text-xs font-bold rounded-full'>
+                        {conversation.unread}
+                      </span>
+                    )}
+                  </div>
+                  <span>
+                    {conversation.participants
+                      .filter((participant) => participant.userId != user.id)
+                      .map((participant) => participant.user.username)
+                      .join(', ')}
+                  </span>
+                </NavLink>
+              ))}
+            </div>
+          )}
         </nav>
         <div className='flex justify-center items-center'>
           <ThemeToggler />

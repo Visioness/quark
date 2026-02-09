@@ -1,10 +1,11 @@
-import { createBrowserRouter } from 'react-router';
+import { createBrowserRouter, Navigate } from 'react-router';
 import { LandingPage, LogInPage, SignUpPage } from '@/pages';
 import { ProtectedRoute } from '@/features/auth/components';
 import { AppLayout, FriendsLayout } from '@/components/layout';
-import { RecentChats } from '@/features/chat/components';
 import { Profile } from '@/features/profile/components';
 import { Friends, Requests } from '@/features/friends/components';
+import { Chat } from '@/features/chat/components';
+import { SocketProvider } from '@/features/chat/context/SocketContext';
 
 export const router = createBrowserRouter([
   {
@@ -24,11 +25,15 @@ export const router = createBrowserRouter([
     children: [
       {
         path: '/',
-        element: <AppLayout />,
+        element: (
+          <SocketProvider>
+            <AppLayout />
+          </SocketProvider>
+        ),
         children: [
           {
             index: true,
-            element: <RecentChats />,
+            element: <Navigate to='/friends' replace />,
           },
           {
             path: 'profile',
@@ -47,6 +52,10 @@ export const router = createBrowserRouter([
                 element: <Requests />,
               },
             ],
+          },
+          {
+            path: 'chat/:conversationId',
+            element: <Chat />,
           },
         ],
       },

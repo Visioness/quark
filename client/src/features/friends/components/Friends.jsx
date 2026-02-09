@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router';
 import { MessageSquare, UserMinus, Users } from 'lucide-react';
 import { useAuth } from '@/features/auth/context';
+import { useSocket } from '@/features/chat/context';
 import { getFriends, removeFriend } from '@/services/friend.service';
 import { Button, LoadingSpinner } from '@/components/ui';
 
 export const Friends = () => {
   const { accessToken } = useAuth();
+  const { findPrivateConversation } = useSocket();
   const [friendList, setFriendList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -16,9 +19,8 @@ export const Friends = () => {
       setLoading(true);
       try {
         const result = await getFriends(accessToken);
-        if (result.success) {
-          setFriendList(result.friends);
-        }
+
+        setFriendList(result.friends);
       } catch (error) {
         setError(error);
       } finally {
@@ -31,12 +33,9 @@ export const Friends = () => {
   const handleRemove = async (friendId) => {
     setRemovingFriend(friendId);
     try {
-      const result = await removeFriend(friendId, accessToken);
-      if (result.success) {
-        setFriendList((prev) =>
-          prev.filter((friend) => friend.id !== friendId)
-        );
-      }
+      await removeFriend(friendId, accessToken);
+
+      setFriendList((prev) => prev.filter((friend) => friend.id !== friendId));
     } catch (error) {
       setError(error);
     } finally {
@@ -67,37 +66,43 @@ export const Friends = () => {
                   My Friends ({friendList.length})
                 </h4>
                 <ul className='space-y-2'>
-                  {friendList.map((friend) => (
-                    <li
-                      key={friend.username}
-                      className='group flex justify-between items-center p-3 rounded-xl bg-card border border-border/50 shadow-sm hover:shadow-md transition-all duration-200'>
-                      <div className='flex items-center gap-3'>
-                        <div className='w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium border border-primary/20'>
-                          {friend.username.charAt(0).toUpperCase()}
+                  {friendList.map((friend) => {
+                    const conversationId = findPrivateConversation(friend.id);
+
+                    return (
+                      <li
+                        key={friend.username}
+                        className='group flex justify-between items-center p-3 rounded-xl bg-card border border-border/50 shadow-sm hover:shadow-md transition-all duration-200'>
+                        <div className='flex items-center gap-3'>
+                          <div className='w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium border border-primary/20'>
+                            {friend.username.charAt(0).toUpperCase()}
+                          </div>
+                          <span className='font-medium text-card-foreground'>
+                            {friend.username}
+                          </span>
                         </div>
-                        <span className='font-medium text-card-foreground'>
-                          {friend.username}
-                        </span>
-                      </div>
-                      <div className='flex items-center gap-2'>
-                        <Button
-                          variant='transparent'
-                          size='sm'
-                          extra='w-9 h-9 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground border-transparent'>
-                          <MessageSquare className='w-4 h-4' />
-                        </Button>
-                        <Button
-                          variant='transparent'
-                          size='sm'
-                          extra='w-9 h-9 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive border-transparent'
-                          loading={removingFriend === friend.id}
-                          disabled={removingFriend !== null}
-                          onClick={() => handleRemove(friend.id)}>
-                          <UserMinus className='w-4 h-4' />
-                        </Button>
-                      </div>
-                    </li>
-                  ))}
+                        <div className='flex items-center gap-2'>
+                          <Link to={`/chat/${conversationId}`}>
+                            <Button
+                              variant='transparent'
+                              size='sm'
+                              extra='w-9 h-9 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground border-transparent'>
+                              <MessageSquare className='w-4 h-4' />
+                            </Button>
+                          </Link>
+                          <Button
+                            variant='transparent'
+                            size='sm'
+                            extra='w-9 h-9 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive border-transparent'
+                            loading={removingFriend === friend.id}
+                            disabled={removingFriend !== null}
+                            onClick={() => handleRemove(friend.id)}>
+                            <UserMinus className='w-4 h-4' />
+                          </Button>
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             ) : (

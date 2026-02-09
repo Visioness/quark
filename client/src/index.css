@@ -1,5 +1,14 @@
 @import 'tailwindcss';
 
+@layer utilities {
+  textarea,
+  main {
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: var(--muted) transparent;
+  }
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
@@ -49,7 +58,7 @@
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 5%);
+  --input: oklch(0.2341 0 0);
   --ring: oklch(0.38 0.189 293.745);
   --sidebar: oklch(0.21 0.006 285.885);
   --sidebar-foreground: oklch(0.985 0 0);
