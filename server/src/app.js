@@ -1,16 +1,28 @@
 import 'dotenv/config';
+import { createServer } from 'node:http';
 import express from 'express';
+import { Server } from 'socket.io';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import passport from 'passport';
 import { LocalStrategy } from './auth/strategy.js';
 import { router as apiRouter } from './routes/api.js';
+import { initSocket } from './socket/index.js';
 
 const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: [process.env.CLIENT_URL, 'http://localhost:5173'],
+    credentials: true,
+  },
+  connectionStateRecovery: {},
+});
+initSocket(io);
 
 app.use(
   cors({
-    origin: 'http://localhost:5173',
+    origin: [process.env.CLIENT_URL, 'http://localhost:5173'],
     credentials: true,
   })
 );
@@ -35,7 +47,8 @@ app.use((error, req, res, next) => {
   res.status(error.statusCode || 500).json({
     success: false,
     message: error.message || 'Something went wrong on the server.',
+    data: error.data || null,
   });
 });
 
-export default app;
+export default httpServer;

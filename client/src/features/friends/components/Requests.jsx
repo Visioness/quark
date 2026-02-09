@@ -21,9 +21,8 @@ export const Requests = () => {
       setLoading(true);
       try {
         const result = await getFriendRequests(accessToken);
-        if (result.success) {
-          setFriendRequests(result.friendRequests);
-        }
+
+        setFriendRequests(result.friendRequests);
       } catch (error) {
         setError(error);
       } finally {
@@ -36,12 +35,11 @@ export const Requests = () => {
   const handleAccept = async (senderId) => {
     setProcessingRequest(senderId);
     try {
-      const result = await acceptFriendRequest(senderId, accessToken);
-      if (result.success) {
-        setFriendRequests((prev) =>
-          prev.filter((request) => request.senderId !== senderId)
-        );
-      }
+      await acceptFriendRequest(senderId, accessToken);
+
+      setFriendRequests((prev) =>
+        prev.filter((request) => request.senderId !== senderId)
+      );
     } catch (error) {
       setError(error);
     } finally {
@@ -52,12 +50,11 @@ export const Requests = () => {
   const handleDecline = async (senderId) => {
     setProcessingRequest(senderId);
     try {
-      const result = await rejectFriendRequest(senderId, accessToken);
-      if (result.success) {
-        setFriendRequests((prev) =>
-          prev.filter((request) => request.senderId !== senderId)
-        );
-      }
+      await rejectFriendRequest(senderId, accessToken);
+
+      setFriendRequests((prev) =>
+        prev.filter((request) => request.senderId !== senderId)
+      );
     } catch (error) {
       setError(error);
     } finally {

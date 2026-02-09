@@ -1,3 +1,4 @@
+import { ApiError } from '@/services/api';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
@@ -101,26 +102,20 @@ export const useForm = ({ initialForm, apiCall }) => {
     try {
       setLoading(true);
 
-      // Mock API call
-      const result = await apiCall(formData);
+      await apiCall(formData);
 
-      // Validation errors from the server
-      if (result.success) {
-        setError(null);
-        navigate('/');
-      } else {
-        if (result.errors && Array.isArray(result.errors)) {
-          const errors = initialForm;
-          result.errors.forEach((error) => {
-            errors[error.path] = error.message;
-          });
-          setError(errors);
-        } else {
-          setError({ global: result.message });
-        }
-      }
+      setError(null);
+      navigate('/');
     } catch (error) {
-      setError({ global: error.message });
+      if (error.data) {
+        const fieldErrors = {};
+        error.data.forEach((error) => {
+          fieldErrors[error.path] = error.message;
+        });
+        setError(fieldErrors);
+      } else {
+        setError({ global: error.message });
+      }
     } finally {
       setLoading(false);
     }

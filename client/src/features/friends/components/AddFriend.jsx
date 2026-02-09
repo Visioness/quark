@@ -14,7 +14,7 @@ export const AddFriend = () => {
     e.preventDefault();
 
     if (!username.trim()) {
-      setMessage({ type: 'error', text: 'Please enter a username' });
+      setMessage({ type: 'error', text: 'Please enter a username.' });
       return;
     }
 
@@ -24,15 +24,13 @@ export const AddFriend = () => {
     try {
       const result = await sendFriendRequest(username.trim(), accessToken);
 
-      if (result.success) {
-        setMessage({ type: 'success', text: result.message });
-        setUsername('');
-      } else {
-        setMessage({
-          type: 'error',
-          text: result.message || 'Failed to send friend request',
-        });
-      }
+      setMessage({ type: 'success', text: result.message });
+      setUsername('');
+    } catch (error) {
+      setMessage({
+        type: 'error',
+        text: error.message || 'Failed to send friend request.',
+      });
     } finally {
       setLoading(false);
     }

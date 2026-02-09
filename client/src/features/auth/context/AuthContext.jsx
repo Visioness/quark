@@ -11,10 +11,14 @@ import { LoadingPage } from '@/pages';
 const AuthContext = createContext({
   user: {},
   accessToken: null,
+  isAuthenticated: false,
+  isInitialized: false,
+  loading: false,
   signUp: () => {},
   logIn: () => {},
   logOut: () => {},
   logOutAllSessions: () => {},
+  refreshToken: () => {},
 });
 
 export const AuthProvider = ({ children }) => {
@@ -32,12 +36,11 @@ export const AuthProvider = ({ children }) => {
           refreshToken(),
           new Promise((resolve) => setTimeout(resolve, 1000)),
         ]);
-        if (result.success) {
-          setAuth({
-            accessToken: result.accessToken,
-            user: result.user,
-          });
-        }
+
+        setAuth({
+          accessToken: result.accessToken,
+          user: result.user,
+        });
       } finally {
         setIsInitialized(true);
       }
@@ -50,13 +53,11 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       const result = await logIn(credentials);
-      if (result.success) {
-        setAuth({
-          accessToken: result.accessToken,
-          user: result.user,
-        });
-      }
-      return result;
+
+      setAuth({
+        accessToken: result.accessToken,
+        user: result.user,
+      });
     } finally {
       setLoading(false);
     }
@@ -64,6 +65,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     await logOut();
+
     setAuth({
       accessToken: null,
       user: null,
@@ -72,6 +74,7 @@ export const AuthProvider = ({ children }) => {
 
   const logoutallsessions = async () => {
     await logOutAllSessions();
+
     setAuth({
       accessToken: null,
       user: null,
@@ -82,13 +85,11 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       const result = await signUp(userData);
-      if (result.success) {
-        setAuth({
-          accessToken: result.accessToken,
-          user: result.user,
-        });
-      }
-      return result;
+
+      setAuth({
+        accessToken: result.accessToken,
+        user: result.user,
+      });
     } finally {
       setLoading(false);
     }
@@ -98,13 +99,11 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       const result = await refreshToken();
-      if (result.success) {
-        setAuth({
-          accessToken: result.accessToken,
-          user: result.user,
-        });
-      }
-      return result;
+
+      setAuth({
+        accessToken: result.accessToken,
+        user: result.user,
+      });
     } finally {
       setLoading(false);
     }
@@ -114,13 +113,13 @@ export const AuthProvider = ({ children }) => {
     user: auth.user,
     accessToken: auth.accessToken,
     isAuthenticated: !!auth.user && !!auth.accessToken,
-    loading,
     isInitialized,
+    loading,
+    signup,
     login,
     logout,
     logoutallsessions,
     refreshtoken,
-    signup,
   };
 
   if (!isInitialized) {

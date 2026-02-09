@@ -7,11 +7,10 @@ const validateRequest = (req, res, next) => {
     return next();
   }
 
-  return res.status(400).json({
-    success: false,
-    message: 'Invalid field/s.',
-    errors: errors.array().map((e) => ({ path: e.path, message: e.msg })),
-  });
+  const error = new Error('Validation failed.');
+  error.statusCode = 400;
+  error.data = errors.array().map((e) => ({ path: e.path, message: e.msg }));
+  next(error);
 };
 
 export { validateRequest };

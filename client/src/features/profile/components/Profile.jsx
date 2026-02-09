@@ -14,9 +14,8 @@ export const Profile = () => {
       setLoading(true);
       try {
         const result = await getProfile(user.username, accessToken);
-        if (result.success) {
-          setProfile(result.profile);
-        }
+
+        setProfile(result.profile);
       } catch (error) {
         setError(error);
       } finally {
