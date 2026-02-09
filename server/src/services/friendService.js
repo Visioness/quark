@@ -1,5 +1,7 @@
+import * as conversationService from './conversationService.js';
 import * as userModel from '../models/userModel.js';
 import * as friendModel from '../models/friendModel.js';
+import { appEvents } from '../lib/events.js';
 
 const getFriends = async (userId) => {
   return await friendModel.getFriends(userId);
@@ -27,8 +29,19 @@ const sendFriendRequest = async (senderId, username) => {
     switch (existingFriendRequest.status) {
       case 'PENDING': {
         if (existingFriendRequest.receiverId === senderId) {
+          const updatedRequest = await friendModel.acceptRequest(
+            existingFriendRequest.id
+          );
           await friendModel.addFriendship(senderId, receiver.id);
-          return await friendModel.acceptRequest(existingFriendRequest.id);
+
+          await conversationService.createConversation(senderId, receiver.id);
+
+          appEvents.emit('conversation:created', {
+            conversation,
+            participantIds: [senderId, receiver.id],
+          });
+
+          return updatedRequest;
         } else {
           const error = new Error(
             'You have already sent a friend request to that user.'
@@ -74,8 +87,22 @@ const acceptFriendRequest = async (senderId, receiverId) => {
     throw error;
   }
 
+  const updatedRequest = await friendModel.acceptRequest(
+    existingFriendRequest.id
+  );
   await friendModel.addFriendship(senderId, receiverId);
-  return await friendModel.acceptRequest(existingFriendRequest.id);
+
+  const conversation = await conversationService.createConversation(
+    senderId,
+    receiverId
+  );
+
+  appEvents.emit('conversation:created', {
+    conversation,
+    participantIds: [senderId, receiverId],
+  });
+
+  return updatedRequest;
 };
 
 const rejectFriendRequest = async (senderId, receiverId) => {

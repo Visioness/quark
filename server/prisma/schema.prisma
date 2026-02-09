@@ -28,6 +28,9 @@ model User {
   receivedRequests FriendRequest[] @relation("receiver")
   friends          User[]          @relation("UserFriends")
   symmetricFriends User[]          @relation("UserFriends")
+
+  conversationParticipants ConversationParticipant[]
+  sentMessages             Message[]
 }
 
 model RefreshToken {
@@ -53,6 +56,41 @@ model FriendRequest {
   @@unique([senderId, receiverId])
 }
 
+model Conversation {
+  id        String           @id @default(cuid(2))
+  type      ConversationType @default(PRIVATE)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  participants ConversationParticipant[]
+  messages     Message[]
+}
+
+model ConversationParticipant {
+  id             String   @id @default(cuid(2))
+  conversationId String
+  userId         String
+  joinedAt       DateTime @default(now())
+  lastReadAt     DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([conversationId, userId])
+}
+
+model Message {
+  id             String   @id @default(cuid(2))
+  conversationId String
+  content        String
+  senderId       String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
 enum ProfileStatus {
   PUBLIC
   HIDDEN
@@ -62,4 +100,8 @@ enum RequestStatus {
   PENDING
   ACCEPTED
   REJECTED
+}
+
+enum ConversationType {
+  PRIVATE
 }
