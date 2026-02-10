@@ -1,41 +1,41 @@
 import { request } from '@/services/api';
 
-export const getFriends = async (accessToken) => {
-  return await request(`/friends`, {}, accessToken);
+export const getFriends = async (tokenOverride = null) => {
+  return await request('/friends', {}, tokenOverride);
 };
 
-export const getFriendRequests = async (accessToken) => {
-  return await request('/friends/requests', {}, accessToken);
+export const getFriendRequests = async (tokenOverride = null) => {
+  return await request('/friends/requests', {}, tokenOverride);
 };
 
-export const sendFriendRequest = async (username, accessToken) => {
+export const sendFriendRequest = async (username, tokenOverride = null) => {
   return await request(
     `/friends/requests/${username}`,
     { method: 'POST' },
-    accessToken
+    tokenOverride
   );
 };
 
-export const acceptFriendRequest = async (senderId, accessToken) => {
+export const acceptFriendRequest = async (senderId, tokenOverride = null) => {
   return await request(
     `/friends/requests/${senderId}/accept`,
     { method: 'PUT' },
-    accessToken
+    tokenOverride
   );
 };
 
-export const rejectFriendRequest = async (senderId, accessToken) => {
+export const rejectFriendRequest = async (senderId, tokenOverride = null) => {
   return await request(
     `/friends/requests/${senderId}/reject`,
     { method: 'PUT' },
-    accessToken
+    tokenOverride
   );
 };
 
-export const removeFriend = async (friendId, accessToken) => {
+export const removeFriend = async (friendId, tokenOverride = null) => {
   return await request(
     `/friends/${friendId}`,
     { method: 'DELETE' },
-    accessToken
+    tokenOverride
   );
 };

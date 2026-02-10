@@ -1,6 +1,18 @@
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+
 let refreshPromise = null;
+
+let getAccessToken = () => null;
+let onAuthRefresh = null;
+
+export const configureApiAuth = ({
+  getAccessToken: tokenGetter,
+  onAuthRefresh: refreshHandler,
+}) => {
+  getAccessToken = tokenGetter || (() => null);
+  onAuthRefresh = refreshHandler || null;
+};
 
 export class ApiError extends Error {
   constructor(message, status, data = null) {
@@ -21,20 +33,21 @@ const performTokenRefresh = async () => {
   const refreshData = await refreshResponse.json();
 
   if (refreshData.success && refreshData.accessToken) {
-    return refreshData.accessToken;
+    return refreshData;
   }
 
   throw new Error('Refresh failed');
 };
 
-export const request = async (url, options = {}, accessToken = null) => {
+export const request = async (url, options = {}, tokenOverride = null) => {
   const headers = {
     'Content-Type': 'application/json',
     ...options.headers,
   };
 
-  if (accessToken) {
-    headers.Authorization = `Bearer ${accessToken}`;
+  const token = tokenOverride ?? getAccessToken();
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
   }
 
   let response;
@@ -62,9 +75,18 @@ export const request = async (url, options = {}, accessToken = null) => {
       if (!refreshPromise) {
         refreshPromise = performTokenRefresh();
       }
-      const newToken = await refreshPromise;
 
-      return await request(url, { ...options, _isRetry: true }, newToken);
+      const refreshResult = await refreshPromise;
+
+      if (onAuthRefresh) {
+        onAuthRefresh(refreshResult);
+      }
+
+      return await request(
+        url,
+        { ...options, _isRetry: true },
+        refreshResult.accessToken
+      );
     } catch {
       throw new ApiError('Session expired. Please log in again.', 401);
     } finally {

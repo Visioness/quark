@@ -34,8 +34,10 @@ export const SocketProvider = ({ children }) => {
   }, [activeConversation]);
 
   useEffect(() => {
+    if (!accessToken) return;
+
     const fetchConversations = async () => {
-      const result = await getUserConversations(accessToken);
+      const result = await getUserConversations();
       setConversations(result.success ? result.conversations : []);
     };
     fetchConversations();
@@ -97,9 +99,11 @@ export const SocketProvider = ({ children }) => {
       console.error('Socket connection error: ', error.message);
 
       if (error.message === 'Token expired.') {
-        const result = await refreshToken();
-        if (result?.success) {
+        try {
+          await refreshRef.current();
           return;
+        } catch {
+          // Fall through to disconnect
         }
       }
 

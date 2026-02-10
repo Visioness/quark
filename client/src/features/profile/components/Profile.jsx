@@ -1,43 +1,31 @@
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/features/auth/context';
-import { getProfile } from '@/services/profile.service';
 import { LoadingSpinner } from '@/components/ui';
+import { getProfile } from '@/services/profile.service';
 
 export const Profile = () => {
-  const { accessToken, user } = useAuth();
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const { user } = useAuth();
+  const { isPending, isError, data, error } = useQuery({
+    queryKey: ['profile', user.username],
+    queryFn: () => getProfile(user.username),
+    enabled: !!user.username,
+  });
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      setLoading(true);
-      try {
-        const result = await getProfile(user.username, accessToken);
-
-        setProfile(result.profile);
-      } catch (error) {
-        setError(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProfile();
-  }, [accessToken, user]);
+  const profile = data?.profile;
 
   return (
     <div className='w-full h-full flex flex-col items-center px-8 py-4 space-y-4'>
       <h3 className='text-2xl text-center font-medium mb-4'>Profile</h3>
       <div className='flex-1 flex justify-center items-center'>
-        {loading && <LoadingSpinner size='md' />}
+        {isPending && <LoadingSpinner size='md' />}
 
-        {error && (
+        {isError && (
           <div className='p-4 rounded-lg border border-destructive bg-destructive/10 text-destructive'>
             {error.message || 'Failed to load profile'}
           </div>
         )}
 
-        {profile && !loading && (
+        {profile && (
           <div className='sm:min-w-xs max-w-sm p-6 rounded-lg border bg-card border-border'>
             <div className='space-y-4'>
               <div>

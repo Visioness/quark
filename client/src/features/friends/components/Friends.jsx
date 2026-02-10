@@ -1,72 +1,40 @@
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { MessageSquare, UserMinus, Users } from 'lucide-react';
-import { useAuth } from '@/features/auth/context';
 import { useSocket } from '@/features/chat/context';
-import { getFriends, removeFriend } from '@/services/friend.service';
 import { Button, LoadingSpinner } from '@/components/ui';
+import { useFriendList, useRemoveFriend } from '../queries/useFriends';
 
 export const Friends = () => {
-  const { accessToken } = useAuth();
   const { findPrivateConversation } = useSocket();
-  const [friendList, setFriendList] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [removingFriend, setRemovingFriend] = useState(null);
+  const { isPending, isError, data, error } = useFriendList();
+  const removeFriendMutation = useRemoveFriend();
 
-  useEffect(() => {
-    const fetchFriends = async () => {
-      setLoading(true);
-      try {
-        const result = await getFriends(accessToken);
-
-        setFriendList(result.friends);
-      } catch (error) {
-        setError(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchFriends();
-  }, [accessToken]);
-
-  const handleRemove = async (friendId) => {
-    setRemovingFriend(friendId);
-    try {
-      await removeFriend(friendId, accessToken);
-
-      setFriendList((prev) => prev.filter((friend) => friend.id !== friendId));
-    } catch (error) {
-      setError(error);
-    } finally {
-      setRemovingFriend(null);
-    }
-  };
+  const friends = data?.friends;
 
   return (
     <div className='w-full max-w-xl mx-auto flex flex-col px-4 py-2 space-y-6'>
       <div className='flex-1 flex flex-col items-center w-full'>
-        {loading && (
+        {isPending && (
           <div className='py-8'>
             <LoadingSpinner size='md' />
           </div>
         )}
 
-        {error && (
+        {isError && (
           <div className='w-full p-4 rounded-lg border border-destructive/20 bg-destructive/5 text-destructive text-sm text-center'>
             {error.message || 'Failed to load friends'}
           </div>
         )}
 
-        {!loading && !error && (
+        {!isPending && friends && (
           <div className='w-full'>
-            {friendList.length > 0 ? (
+            {friends.length > 0 ? (
               <div className='space-y-3'>
                 <h4 className='text-sm font-medium text-muted-foreground ml-1 mb-2'>
-                  My Friends ({friendList.length})
+                  My Friends ({friends.length})
                 </h4>
                 <ul className='space-y-2'>
-                  {friendList.map((friend) => {
+                  {friends.map((friend) => {
                     const conversationId = findPrivateConversation(friend.id);
 
                     return (
@@ -94,9 +62,9 @@ export const Friends = () => {
                             variant='transparent'
                             size='sm'
                             extra='w-9 h-9 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive border-transparent'
-                            loading={removingFriend === friend.id}
-                            disabled={removingFriend !== null}
-                            onClick={() => handleRemove(friend.id)}>
+                            onClick={() =>
+                              removeFriendMutation.mutate(friend.id)
+                            }>
                             <UserMinus className='w-4 h-4' />
                           </Button>
                         </div>

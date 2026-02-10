@@ -8,78 +8,37 @@ import {
 } from '@/services/friend.service';
 import { Button, LoadingSpinner } from '@/components/ui';
 import { AddFriend } from './AddFriend';
+import {
+  useAcceptFriendRequest,
+  useFriendRequests,
+  useRejectFriendRequest,
+} from '../queries/useFriends';
 
 export const Requests = () => {
-  const { accessToken } = useAuth();
-  const [friendRequests, setFriendRequests] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [processingRequest, setProcessingRequest] = useState(null);
+  const { isPending, isError, data, error } = useFriendRequests();
+  const acceptMutation = useAcceptFriendRequest();
+  const rejectMutation = useRejectFriendRequest();
 
-  useEffect(() => {
-    const fetchFriendRequests = async () => {
-      setLoading(true);
-      try {
-        const result = await getFriendRequests(accessToken);
-
-        setFriendRequests(result.friendRequests);
-      } catch (error) {
-        setError(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchFriendRequests();
-  }, [accessToken]);
-
-  const handleAccept = async (senderId) => {
-    setProcessingRequest(senderId);
-    try {
-      await acceptFriendRequest(senderId, accessToken);
-
-      setFriendRequests((prev) =>
-        prev.filter((request) => request.senderId !== senderId)
-      );
-    } catch (error) {
-      setError(error);
-    } finally {
-      setProcessingRequest(null);
-    }
-  };
-
-  const handleDecline = async (senderId) => {
-    setProcessingRequest(senderId);
-    try {
-      await rejectFriendRequest(senderId, accessToken);
-
-      setFriendRequests((prev) =>
-        prev.filter((request) => request.senderId !== senderId)
-      );
-    } catch (error) {
-      setError(error);
-    } finally {
-      setProcessingRequest(null);
-    }
-  };
+  const friendRequests = data?.friendRequests;
 
   return (
     <div className='w-full max-w-xl mx-auto flex flex-col px-4 py-2 space-y-6'>
       <AddFriend />
 
       <div className='flex-1 flex flex-col items-center w-full'>
-        {loading && (
+        {isPending && (
           <div className='py-8'>
             <LoadingSpinner size='md' />
           </div>
         )}
 
-        {error && (
+        {isError && (
           <div className='w-full p-4 rounded-lg border border-destructive/20 bg-destructive/5 text-destructive text-sm text-center'>
             {error.message || 'Failed to load friend requests'}
           </div>
         )}
 
-        {!loading && !error && (
+        {friendRequests && (
           <div className='w-full'>
             {friendRequests.length > 0 ? (
               <div className='space-y-3'>
@@ -110,9 +69,9 @@ export const Requests = () => {
                           variant='transparent'
                           size='sm'
                           extra='w-9 h-9 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/20'
-                          loading={processingRequest === request.senderId}
-                          disabled={processingRequest !== null}
-                          onClick={() => handleAccept(request.senderId)}>
+                          onClick={() =>
+                            acceptMutation.mutate(request.senderId)
+                          }>
                           <Check
                             className='w-4 h-4 text-emerald-500/80'
                             strokeWidth={2.5}
@@ -122,9 +81,9 @@ export const Requests = () => {
                           variant='transparent'
                           size='sm'
                           extra='w-9 h-9 rounded-full bg-destructive/10 hover:bg-destructive/20 border-destructive/20'
-                          loading={processingRequest === request.senderId}
-                          disabled={processingRequest !== null}
-                          onClick={() => handleDecline(request.senderId)}>
+                          onClick={() =>
+                            rejectMutation.mutate(request.senderId)
+                          }>
                           <X
                             className='w-4 h-4 text-destructive/80'
                             strokeWidth={2.5}

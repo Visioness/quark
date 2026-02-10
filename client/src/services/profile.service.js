@@ -1,5 +1,5 @@
 import { request } from '@/services/api';
 
-export const getProfile = async (username, accessToken) => {
-  return await request(`/profile/${username}`, {}, accessToken);
+export const getProfile = async (username, tokenOverride = null) => {
+  return await request(`/profile/${username}`, {}, tokenOverride);
 };

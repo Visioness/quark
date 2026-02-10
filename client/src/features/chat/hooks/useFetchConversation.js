@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useAuth } from '@/features/auth/context';
 import { getConversation } from '@/services/conversation.service';
 
 export const useFetchConversation = (conversationId) => {
-  const { accessToken } = useAuth();
   const [conversation, setConversation] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,7 +18,7 @@ export const useFetchConversation = (conversationId) => {
   useEffect(() => {
     let ignore = false;
 
-    getConversation(conversationId, accessToken)
+    getConversation(conversationId)
       .then((result) => {
         if (ignore) return;
         setConversation(result.conversation);
@@ -35,7 +33,7 @@ export const useFetchConversation = (conversationId) => {
     return () => {
       ignore = true;
     };
-  }, [conversationId, accessToken]);
+  }, [conversationId]);
 
   return { conversation, setConversation, loading, error };
 };

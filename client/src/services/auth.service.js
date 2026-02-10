@@ -14,23 +14,23 @@ export const logIn = async (formData) => {
   });
 };
 
-export const logOut = async (accessToken) => {
+export const logOut = async (tokenOverride = null) => {
   return await request(
     '/auth/log-out',
     {
       method: 'POST',
     },
-    accessToken
+    tokenOverride
   );
 };
 
-export const logOutAllSessions = async (accessToken) => {
+export const logOutAllSessions = async (tokenOverride = null) => {
   return await request(
     '/auth/log-out-all',
     {
       method: 'POST',
     },
-    accessToken
+    tokenOverride
   );
 };
 
