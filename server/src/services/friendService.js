@@ -34,12 +34,23 @@ const sendFriendRequest = async (senderId, username) => {
           );
           await friendModel.addFriendship(senderId, receiver.id);
 
-          await conversationService.createConversation(senderId, receiver.id);
+          const previousConversation =
+            await conversationService.getPreviousConversation(
+              senderId,
+              receiver.id
+            );
 
-          appEvents.emit('conversation:created', {
-            conversation,
-            participantIds: [senderId, receiver.id],
-          });
+          if (!previousConversation) {
+            const conversation = await conversationService.createConversation(
+              senderId,
+              receiver.id
+            );
+
+            appEvents.emit('conversation:created', {
+              conversation,
+              participantIds: [senderId, receiver.id],
+            });
+          }
 
           return updatedRequest;
         } else {
@@ -92,15 +103,20 @@ const acceptFriendRequest = async (senderId, receiverId) => {
   );
   await friendModel.addFriendship(senderId, receiverId);
 
-  const conversation = await conversationService.createConversation(
-    senderId,
-    receiverId
-  );
+  const previousConversation =
+    await conversationService.getPreviousConversation(senderId, receiverId);
 
-  appEvents.emit('conversation:created', {
-    conversation,
-    participantIds: [senderId, receiverId],
-  });
+  if (!previousConversation) {
+    const conversation = await conversationService.createConversation(
+      senderId,
+      receiverId
+    );
+
+    appEvents.emit('conversation:created', {
+      conversation,
+      participantIds: [senderId, receiverId],
+    });
+  }
 
   return updatedRequest;
 };

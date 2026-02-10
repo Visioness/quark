@@ -18,6 +18,10 @@ const getConversation = async (conversationId, userId) => {
   return existingConversation;
 };
 
+const getPreviousConversation = async (userId, friendId) => {
+  return await conversationModel.getPreviousConversation(userId, friendId);
+};
+
 const getUserConversations = async (userId) => {
   const conversations = await conversationModel.getUserConversations(userId);
 
@@ -86,6 +90,7 @@ const verifyParticipant = async (conversationId, userId) => {
 
 export {
   getConversation,
+  getPreviousConversation,
   getUserConversations,
   createConversation,
   createMessage,

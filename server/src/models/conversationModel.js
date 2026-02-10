@@ -28,6 +28,17 @@ const getConversation = async (conversationId) => {
   });
 };
 
+const getPreviousConversation = async (userId, friendId) => {
+  return await prisma.conversation.findFirst({
+    where: {
+      AND: [
+        { participants: { some: { userId: userId } } },
+        { participants: { some: { userId: friendId } } },
+      ],
+    },
+  });
+};
+
 const getUserConversations = async (userId) => {
   return await prisma.conversation.findMany({
     where: {
@@ -112,6 +123,7 @@ const markAsRead = async (conversationId, userId) => {
 
 export {
   getConversation,
+  getPreviousConversation,
   getUserConversations,
   getParticipant,
   getUnreadCounts,
