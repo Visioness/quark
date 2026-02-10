@@ -28,17 +28,26 @@ export const MessageInput = ({ onSend }) => {
     wrapperRef.current.style.height = 'auto';
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
+    }
+  };
+
   return (
     <footer className='mt-8'>
       <form onSubmit={handleSubmit} className='flex h-min gap-2'>
         <div
           ref={wrapperRef}
           className='flex-1 h-[42px] rounded-lg max-h-[90px] overflow-hidden'>
-          <input
+          <textarea
             ref={inputRef}
             id='message'
             name='message'
+            rows={1}
             onInput={handleInput}
+            onKeyDown={handleKeyDown}
             spellCheck='false'
             autoComplete='off'
             className='w-full h-full px-4 py-2 max-h-[90px] rounded-lg resize-none border border-border bg-input outline-none focus:inset-ring-1 focus:inset-ring-primary overflow-y-auto scrollbar'

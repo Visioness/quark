@@ -14,7 +14,9 @@ export const AddFriend = () => {
   const onSubmit = (e) => {
     e.preventDefault();
 
-    sendMutation.mutate(username);
+    sendMutation.mutate(username, {
+      onSuccess: () => setUsername(''),
+    });
   };
 
   return (

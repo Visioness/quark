@@ -47,13 +47,13 @@ export const useAcceptFriendRequest = () => {
         ),
       }));
 
-      if (acceptFriendRequest) {
+      if (acceptedRequest) {
         queryClient.setQueryData(friendKeys.list(), (old) => {
           const newFriend = {
             id: acceptedRequest.senderId,
             username: acceptedRequest.sender.username,
           };
-          return old ? [...old, newFriend] : [newFriend];
+          return { ...old, friends: [...(old?.friends || []), newFriend] };
         });
       }
 

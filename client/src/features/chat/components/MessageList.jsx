@@ -1,9 +1,9 @@
-import { useEffect, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 
 export const MessageList = ({ messages, currentUserId }) => {
   const chatRef = useRef(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (chatRef.current) {
       chatRef.current.scrollTop = chatRef.current.scrollHeight;
     }

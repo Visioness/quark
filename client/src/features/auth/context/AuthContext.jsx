@@ -1,4 +1,11 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import {
   logIn,
   logOut,
@@ -18,7 +25,10 @@ const getAccessTokenExpiryMs = (accessToken) => {
     if (!payload) return null;
 
     const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
-    const normalized = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
+    const normalized = base64.padEnd(
+      base64.length + ((4 - (base64.length % 4)) % 4),
+      '='
+    );
     const decoded = JSON.parse(atob(normalized));
 
     return decoded.exp ? decoded.exp * 1000 : null;
@@ -130,7 +140,7 @@ export const AuthProvider = ({ children }) => {
     const initializeAuth = async () => {
       try {
         await Promise.all([
-          refreshtoken({ silent: true }),
+          refreshtoken({ silent: true }).catch(() => {}),
           new Promise((resolve) => setTimeout(resolve, 1000)),
         ]);
       } finally {

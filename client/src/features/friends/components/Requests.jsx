@@ -1,11 +1,4 @@
-import { useEffect, useState } from 'react';
 import { Check, X, User, Inbox } from 'lucide-react';
-import { useAuth } from '@/features/auth/context';
-import {
-  getFriendRequests,
-  acceptFriendRequest,
-  rejectFriendRequest,
-} from '@/services/friend.service';
 import { Button, LoadingSpinner } from '@/components/ui';
 import { AddFriend } from './AddFriend';
 import {
