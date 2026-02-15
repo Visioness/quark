@@ -11,7 +11,7 @@ export const ChatHeader = ({ conversation, currentUserId }) => {
   );
 
   return (
-    <header>
+    <header className='bg-card p-2 border-b h-14 border-border'>
       <div className='flex items-center gap-3'>
         <div className='w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium border border-primary/20'>
           {conversation.type === 'PRIVATE' ? <UserRound /> : <UsersRound />}

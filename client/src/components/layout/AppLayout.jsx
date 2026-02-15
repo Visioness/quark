@@ -131,7 +131,7 @@ export const AppLayout = () => {
           </Button>
           <span className='font-bold text-xl text-sidebar-primary'>Quark</span>
         </div>
-        <div className='flex-1 overflow-auto p-4'>
+        <div className='flex-1 overflow-auto'>
           <Outlet />
         </div>
       </main>

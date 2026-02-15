@@ -1,4 +1,4 @@
-import { body } from 'express-validator';
+import { body, query } from 'express-validator';
 
 const logInValidation = [
   body('username')
@@ -56,4 +56,19 @@ const signUpValidation = [
     }),
 ];
 
-export { logInValidation, signUpValidation };
+const paginationValidation = [
+  query('cursor')
+    .optional()
+    .trim()
+    .isString()
+    .withMessage('Cursor must be a string.')
+    .isLength({ min: 1, max: 64 })
+    .withMessage('Cursor must be between 1 - 64 characters length.'),
+  query('limit')
+    .optional()
+    .isInt({ min: 1, max: 100 })
+    .withMessage('Limit must be an integer between 1 - 100.')
+    .toInt(),
+];
+
+export { logInValidation, signUpValidation, paginationValidation };

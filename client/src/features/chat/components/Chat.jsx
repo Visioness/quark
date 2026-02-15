@@ -8,6 +8,10 @@ import {
   useFetchConversation,
   useSendMessage,
 } from '@/features/chat/queries/useConversations';
+import {
+  appendMessageToLastPage,
+  hasMessageInInfiniteData,
+} from '@/features/chat/queries/messageCacheHelpers';
 import { LoadingSpinner } from '@/components/ui';
 import { ChatHeader } from './ChatHeader';
 import { MessageList } from './MessageList';
@@ -39,6 +43,7 @@ export const Chat = () => {
 
   const loadedConversationId = conversation?.id ?? null;
 
+  // Update cache with received message
   useEffect(() => {
     if (!isConnected) return;
 
@@ -46,11 +51,11 @@ export const Chat = () => {
       if (message.conversationId !== conversationId) return;
 
       queryClient.setQueryData(
-        conversationKeys.detail(conversationId),
+        conversationKeys.messages(conversationId),
         (old) => {
           if (!old) return old;
-          if (old.messages.some((m) => m.id === message.id)) return old;
-          return { ...old, messages: [...old.messages, message] };
+          if (hasMessageInInfiniteData(old, message.id)) return old;
+          return appendMessageToLastPage(old, message);
         }
       );
     };
@@ -59,6 +64,7 @@ export const Chat = () => {
     return () => socket.off('message:receive', onMessage);
   }, [socket, isConnected, conversationId, queryClient]);
 
+  // Mark as read on conversation load
   useEffect(() => {
     if (!loadedConversationId) return;
 
@@ -71,6 +77,7 @@ export const Chat = () => {
     return () => changeConversation(null);
   }, [socket, isConnected, changeConversation, loadedConversationId]);
 
+  // Optimistic update with mutation
   const handleSend = (content) => {
     if (!conversation?.id) return;
     sendMessageMutation.mutate({ conversationId: conversation.id, content });
@@ -108,7 +115,7 @@ export const Chat = () => {
   return (
     <div className='chat h-full flex flex-col gap-2 overflow-hidden'>
       <ChatHeader conversation={conversation} currentUserId={user.id} />
-      <MessageList messages={conversation.messages} currentUserId={user.id} />
+      <MessageList conversationId={conversationId} currentUserId={user.id} />
       <MessageInput onSend={handleSend} />
     </div>
   );

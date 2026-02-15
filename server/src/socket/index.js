@@ -72,13 +72,12 @@ export const initSocket = (io) => {
           throw error;
         }
 
-        const trimmed = content.trim();
-        if (trimmed.length === 0) {
+        if (content.trim().length === 0) {
           const error = new Error('Message can not be empty.');
           error.statusCode = 400;
           throw error;
         }
-        if (trimmed.length > 2000) {
+        if (content.length > 2000) {
           const error = new Error('Message too long (max 2000 characters).');
           error.statusCode = 400;
           throw error;
@@ -86,7 +85,7 @@ export const initSocket = (io) => {
 
         const message = await conversationService.createMessage(
           conversationId,
-          trimmed,
+          content,
           userId
         );
 

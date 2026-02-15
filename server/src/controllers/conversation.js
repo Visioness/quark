@@ -1,3 +1,4 @@
+import { matchedData } from 'express-validator';
 import * as conversationService from '../services/conversationService.js';
 
 const getConversation = async (req, res, next) => {
@@ -38,6 +39,29 @@ const getUserConversations = async (req, res, next) => {
   }
 };
 
+const getMessages = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { conversationId } = req.params;
+
+    const { cursor, limit } = matchedData(req);
+
+    const result = await conversationService.getMessages(
+      conversationId,
+      userId,
+      { cursor, limit }
+    );
+
+    res.json({
+      success: true,
+      message: 'Successfully loaded the messages',
+      ...result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const createConversation = async (req, res, next) => {
   try {
     const userId = req.user.id;
@@ -58,4 +82,9 @@ const createConversation = async (req, res, next) => {
   }
 };
 
-export { getConversation, getUserConversations, createConversation };
+export {
+  getConversation,
+  getUserConversations,
+  getMessages,
+  createConversation,
+};

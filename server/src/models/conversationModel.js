@@ -12,11 +12,6 @@ const conversationInclude = {
       },
     },
   },
-  messages: {
-    orderBy: {
-      createdAt: 'asc',
-    },
-  },
 };
 
 const getConversation = async (conversationId) => {
@@ -64,6 +59,23 @@ const getUserConversations = async (userId) => {
       },
     },
   });
+};
+
+const getMessages = async (conversationId, { cursor, limit = 30 }) => {
+  const messages = await prisma.message.findMany({
+    where: { conversationId },
+    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    take: limit + 1,
+    ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+  });
+
+  const hasMore = messages.length > limit;
+  if (hasMore) messages.pop();
+
+  return {
+    messages: messages.reverse(),
+    nextCursor: hasMore ? messages[0]?.id : null,
+  };
 };
 
 const getParticipant = async (conversationId, userId) => {
@@ -125,6 +137,7 @@ export {
   getConversation,
   getPreviousConversation,
   getUserConversations,
+  getMessages,
   getParticipant,
   getUnreadCounts,
   createConversation,

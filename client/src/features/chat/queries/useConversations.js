@@ -1,9 +1,19 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getConversation } from '@/services/conversation.service';
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
+import { getConversation, getMessages } from '@/services/conversation.service';
+import {
+  appendMessageToLastPage,
+  replaceMessageInLastPage,
+} from './messageCacheHelpers';
 
 export const conversationKeys = {
   all: () => ['conversations'],
-  detail: (conversationId) => [...conversationKeys.all(), conversationId],
+  detail: (id) => [...conversationKeys.all(), id],
+  messages: (id) => [...conversationKeys.detail(id), 'messages'],
 };
 
 const emitMessageWithAck = ({ socket, conversationId, content }) =>
@@ -33,6 +43,22 @@ export const useFetchConversation = (conversationId) => {
   });
 };
 
+export const useFetchMessages = (conversationId) => {
+  return useInfiniteQuery({
+    enabled: Boolean(conversationId),
+    queryKey: conversationKeys.messages(conversationId),
+    refetchOnWindowFocus: false,
+    queryFn: async ({ pageParam }) => {
+      const params = new URLSearchParams();
+      if (pageParam) params.set('cursor', pageParam);
+
+      return await getMessages(conversationId, params);
+    },
+    getPreviousPageParam: (firstPage) => firstPage.nextCursor ?? undefined,
+    getNextPageParam: () => undefined,
+  });
+};
+
 export const useSendMessage = ({
   socket,
   userId,
@@ -46,11 +72,10 @@ export const useSendMessage = ({
 
     onMutate: async ({ conversationId, content }) => {
       await queryClient.cancelQueries({
-        queryKey: conversationKeys.detail(conversationId),
+        queryKey: conversationKeys.messages(conversationId),
       });
-
-      const previousConversation = queryClient.getQueryData(
-        conversationKeys.detail(conversationId)
+      const previousMessages = queryClient.getQueryData(
+        conversationKeys.messages(conversationId)
       );
 
       const tempId = `temp-${Date.now()}`;
@@ -64,37 +89,26 @@ export const useSendMessage = ({
       };
 
       queryClient.setQueryData(
-        conversationKeys.detail(conversationId),
-        (old) => {
-          if (!old) return old;
-          return { ...old, messages: [...old.messages, optimisticMessage] };
-        }
+        conversationKeys.messages(conversationId),
+        (old) => appendMessageToLastPage(old, optimisticMessage)
       );
 
-      return { previousConversation, tempId, conversationId };
+      return { previousMessages, tempId, conversationId };
     },
 
     onError: (_error, _vars, context) => {
-      if (context?.previousConversation) {
+      if (context?.previousMessages) {
         queryClient.setQueryData(
-          conversationKeys.detail(context.conversationId),
-          context.previousConversation
+          conversationKeys.messages(context.conversationId),
+          context.previousMessages
         );
       }
     },
 
     onSuccess: (serverMessage, _vars, context) => {
       queryClient.setQueryData(
-        conversationKeys.detail(context.conversationId),
-        (old) => {
-          if (!old) return old;
-          return {
-            ...old,
-            messages: old.messages.map((msg) =>
-              msg.id === context.tempId ? serverMessage : msg
-            ),
-          };
-        }
+        conversationKeys.messages(context.conversationId),
+        (old) => replaceMessageInLastPage(old, context.tempId, serverMessage)
       );
 
       updateConversationOnMessage(serverMessage);

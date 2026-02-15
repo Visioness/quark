@@ -1,31 +1,30 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
+import { Send } from 'lucide-react';
 import { Button } from '@/components/ui';
 
 export const MessageInput = ({ onSend }) => {
+  const [isDisabled, setIsDisabled] = useState(true);
   const inputRef = useRef(null);
-  const wrapperRef = useRef(null);
 
   const handleInput = (e) => {
     if (inputRef.current) {
       inputRef.current.style.height = 'auto';
       inputRef.current.style.height = `${e.target.scrollHeight + 2}px`;
-      wrapperRef.current.style.height = 'auto';
-      wrapperRef.current.style.height = `${e.target.scrollHeight + 2}px`;
 
       e.target.scrollTop = e.target.scrollHeight;
+      setIsDisabled(inputRef.current.value.trim() === '');
     }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    const content = inputRef.current.value.trim();
-    if (!content) return;
+    const content = inputRef.current.value;
+    if (!content?.trim()) return;
 
     onSend(content);
     inputRef.current.value = '';
     inputRef.current.style.height = 'auto';
-    wrapperRef.current.style.height = 'auto';
   };
 
   const handleKeyDown = (e) => {
@@ -36,11 +35,9 @@ export const MessageInput = ({ onSend }) => {
   };
 
   return (
-    <footer className='mt-8'>
-      <form onSubmit={handleSubmit} className='flex h-min gap-2'>
-        <div
-          ref={wrapperRef}
-          className='flex-1 h-[42px] rounded-lg max-h-[90px] overflow-hidden'>
+    <footer>
+      <form onSubmit={handleSubmit} className='flex items-end mt-2 p-4 gap-2'>
+        <div className='flex-1 flex rounded-lg overflow-hidden'>
           <textarea
             ref={inputRef}
             id='message'
@@ -50,10 +47,16 @@ export const MessageInput = ({ onSend }) => {
             onKeyDown={handleKeyDown}
             spellCheck='false'
             autoComplete='off'
-            className='w-full h-full px-4 py-2 max-h-[90px] rounded-lg resize-none border border-border bg-input outline-none focus:inset-ring-1 focus:inset-ring-primary overflow-y-auto scrollbar'
+            className='w-full px-4 py-2 max-h-[90px] rounded-lg resize-none border border-border bg-input outline-none focus:inset-ring-1 focus:inset-ring-primary overflow-y-auto scrollbar'
           />
         </div>
-        <Button type='submit' variant='primary' size='md' extra='rounded-xl'>
+        <Button
+          type='submit'
+          variant='primary'
+          size='md'
+          disabled={isDisabled}
+          extra='rounded-xl max-h-max flex gap-2 font-semibold'>
+          <Send size={20} strokeWidth={3} />
           Send
         </Button>
       </form>

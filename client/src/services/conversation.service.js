@@ -7,3 +7,15 @@ export const getConversation = async (conversationId, tokenOverride = null) => {
 export const getUserConversations = async (tokenOverride = null) => {
   return await request('/conversations', {}, tokenOverride);
 };
+
+export const getMessages = async (
+  conversationId,
+  params,
+  tokenOverride = null
+) => {
+  return await request(
+    `/conversations/${conversationId}/messages?${params}`,
+    {},
+    tokenOverride
+  );
+};

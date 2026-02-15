@@ -41,6 +41,12 @@ const getUserConversations = async (userId) => {
   }));
 };
 
+const getMessages = async (conversationId, userId, { cursor, limit = 30 }) => {
+  await verifyParticipant(conversationId, userId);
+
+  return await conversationModel.getMessages(conversationId, { cursor, limit });
+};
+
 const createConversation = async (userId, friendId) => {
   const friendship = await friendModel.findFriendship(userId, friendId);
 
@@ -92,6 +98,7 @@ export {
   getConversation,
   getPreviousConversation,
   getUserConversations,
+  getMessages,
   createConversation,
   createMessage,
   markAsRead,
