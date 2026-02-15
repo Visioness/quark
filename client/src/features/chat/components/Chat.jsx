@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/features/auth/context';
@@ -16,6 +16,7 @@ import { LoadingSpinner } from '@/components/ui';
 import { ChatHeader } from './ChatHeader';
 import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
+import { TypingIndicator } from './TypingIndicator';
 
 export const Chat = () => {
   const { conversationId } = useParams();
@@ -41,7 +42,33 @@ export const Chat = () => {
     updateConversationOnMessage,
   });
 
+  const [typingUsers, setTypingUsers] = useState([]);
+
   const loadedConversationId = conversation?.id ?? null;
+
+  useEffect(() => {
+    if (!isConnected) return;
+
+    const onTypingStart = (userId) => {
+      setTypingUsers((prev) => {
+        if (!prev.includes(userId)) {
+          return [...prev, userId];
+        }
+        return prev;
+      });
+    };
+    socket.on('conversation:typing:start', onTypingStart);
+
+    const onTypingStop = (userId) => {
+      setTypingUsers((prev) => prev.filter((id) => id !== userId));
+    };
+    socket.on('conversation:typing:stop', onTypingStop);
+
+    return () => {
+      socket.off('conversation:typing:start', onTypingStart);
+      socket.off('conversation:typing:stop', onTypingStop);
+    };
+  }, [socket, isConnected]);
 
   // Update cache with received message
   useEffect(() => {
@@ -83,6 +110,11 @@ export const Chat = () => {
     sendMessageMutation.mutate({ conversationId: conversation.id, content });
   };
 
+  const handleTypingStart = () =>
+    socket.emit('conversation:typing:start', conversationId);
+  const handleTypingStop = () =>
+    socket.emit('conversation:typing:stop', conversationId);
+
   if (isPending) {
     return (
       <div className='h-full flex items-center justify-center'>
@@ -113,10 +145,19 @@ export const Chat = () => {
   }
 
   return (
-    <div className='chat h-full flex flex-col gap-2 overflow-hidden'>
+    <div className='chat h-full flex flex-col gap-1 overflow-hidden'>
       <ChatHeader conversation={conversation} currentUserId={user.id} />
       <MessageList conversationId={conversationId} currentUserId={user.id} />
-      <MessageInput onSend={handleSend} />
+      <TypingIndicator
+        typingUsers={typingUsers}
+        conversation={conversation}
+        currentUserId={user.id}
+      />
+      <MessageInput
+        onSend={handleSend}
+        onTypingStart={handleTypingStart}
+        onTypingStop={handleTypingStop}
+      />
     </div>
   );
 };

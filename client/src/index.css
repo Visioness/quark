@@ -7,6 +7,28 @@
     scrollbar-width: thin;
     scrollbar-color: var(--muted) transparent;
   }
+
+  .animate-ping-bounce {
+    animation: ping-bounce 1s ease-in-out infinite alternate;
+  }
+
+  @keyframes ping-bounce {
+    from {
+      transform: translateY(0);
+      scale: 0.5;
+      opacity: 0.5;
+    }
+    50% {
+      transform: translateY(15%);
+      scale: 0.75;
+      opacity: 0.75;
+    }
+    to {
+      transform: translateY(-15%);
+      scale: 1.25;
+      opacity: 1;
+    }
+  }
 }
 
 @custom-variant dark (&:where(.dark, .dark *));

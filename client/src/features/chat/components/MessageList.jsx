@@ -33,8 +33,9 @@ export const MessageList = ({ conversationId, currentUserId }) => {
             className={`message flex flex-col gap-1 ${
               message.senderId === currentUserId ? 'items-end' : 'items-start'
             }`}>
-            <div
-              className={`content px-4 py-2 max-w-[50%] rounded-xl border whitespace-pre-wrap ${
+            <p
+              lang='en'
+              className={`content px-4 py-2 w-fit max-w-[85%] sm:max-w-[75%] rounded-xl border whitespace-pre-wrap wrap-anywhere ${
                 message.senderId === currentUserId
                   ? message?._status === 'sending'
                     ? 'bg-muted text-muted-foreground border-border'
@@ -42,7 +43,7 @@ export const MessageList = ({ conversationId, currentUserId }) => {
                   : 'bg-card text-card-foreground border-border'
               }`}>
               {message.content}
-            </div>
+            </p>
           </li>
         ))}
       </ul>

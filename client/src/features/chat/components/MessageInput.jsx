@@ -2,9 +2,12 @@ import { useRef, useState } from 'react';
 import { Send } from 'lucide-react';
 import { Button } from '@/components/ui';
 
-export const MessageInput = ({ onSend }) => {
+export const MessageInput = ({ onSend, onTypingStart, onTypingStop }) => {
   const [isDisabled, setIsDisabled] = useState(true);
   const inputRef = useRef(null);
+  const isTyping = useRef(false);
+  const typingTimer = useRef(null);
+  const TYPING_TIMEOUT = 3000;
 
   const handleInput = (e) => {
     if (inputRef.current) {
@@ -13,6 +16,18 @@ export const MessageInput = ({ onSend }) => {
 
       e.target.scrollTop = e.target.scrollHeight;
       setIsDisabled(inputRef.current.value.trim() === '');
+
+      if (!isTyping.current) {
+        onTypingStart();
+        isTyping.current = true;
+      }
+
+      clearTimeout(typingTimer.current);
+
+      typingTimer.current = setTimeout(() => {
+        onTypingStop();
+        isTyping.current = false;
+      }, TYPING_TIMEOUT);
     }
   };
 
@@ -25,6 +40,10 @@ export const MessageInput = ({ onSend }) => {
     onSend(content);
     inputRef.current.value = '';
     inputRef.current.style.height = 'auto';
+
+    clearTimeout(typingTimer.current);
+    onTypingStop();
+    isTyping.current = false;
   };
 
   const handleKeyDown = (e) => {
@@ -36,7 +55,9 @@ export const MessageInput = ({ onSend }) => {
 
   return (
     <footer>
-      <form onSubmit={handleSubmit} className='flex items-end mt-2 p-4 gap-2'>
+      <form
+        onSubmit={handleSubmit}
+        className='flex items-end pb-4 pt-1 px-4 gap-2'>
         <div className='flex-1 flex rounded-lg overflow-hidden'>
           <textarea
             ref={inputRef}

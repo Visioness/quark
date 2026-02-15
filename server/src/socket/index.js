@@ -111,5 +111,23 @@ export const initSocket = (io) => {
         await conversationService.markAsRead(conversationId, userId);
       })
     );
+
+    socket.on(
+      'conversation:typing:start',
+      handleSocketEvent(socket, (conversationId) => {
+        socket
+          .to(conversationId)
+          .emit('conversation:typing:start', socket.user.id);
+      })
+    );
+
+    socket.on(
+      'conversation:typing:stop',
+      handleSocketEvent(socket, (conversationId) => {
+        socket
+          .to(conversationId)
+          .emit('conversation:typing:stop', socket.user.id);
+      })
+    );
   });
 };
