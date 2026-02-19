@@ -61,7 +61,7 @@ export const useFetchMessages = (conversationId) => {
 
 export const useSendMessage = ({
   socket,
-  userId,
+  user,
   updateConversationOnMessage,
 }) => {
   const queryClient = useQueryClient();
@@ -83,8 +83,11 @@ export const useSendMessage = ({
         id: tempId,
         conversationId,
         content,
-        senderId: userId,
+        senderId: user.id,
         createdAt: new Date().toISOString(),
+        sender: {
+          username: user.username,
+        },
         _status: 'sending',
       };
 

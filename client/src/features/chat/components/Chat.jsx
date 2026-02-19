@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/features/auth/context';
@@ -17,6 +17,7 @@ import { ChatHeader } from './ChatHeader';
 import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
 import { TypingIndicator } from './TypingIndicator';
+import { Invites } from './Invites';
 
 export const Chat = () => {
   const { conversationId } = useParams();
@@ -38,13 +39,26 @@ export const Chat = () => {
 
   const sendMessageMutation = useSendMessage({
     socket,
-    userId: user.id,
+    user,
     updateConversationOnMessage,
   });
 
   const [typingUsers, setTypingUsers] = useState([]);
+  const [invitesOpen, setInvitesOpen] = useState(false);
 
   const loadedConversationId = conversation?.id ?? null;
+
+  const canManageInvites = useMemo(() => {
+    if (conversation?.type !== 'GROUP') return false;
+    const role = conversation.participants.find(
+      (p) => p.userId === user.id
+    )?.role;
+    return role === 'OWNER' || role === 'ADMIN';
+  }, [conversation, user.id]);
+
+  useEffect(() => {
+    setInvitesOpen(false);
+  }, [conversationId]);
 
   useEffect(() => {
     if (!isConnected) return;
@@ -146,8 +160,16 @@ export const Chat = () => {
 
   return (
     <div className='chat h-full flex flex-col gap-1 overflow-hidden'>
-      <ChatHeader conversation={conversation} currentUserId={user.id} />
-      <MessageList conversationId={conversationId} currentUserId={user.id} />
+      <ChatHeader
+        conversation={conversation}
+        currentUserId={user.id}
+        onOpenInvites={canManageInvites ? () => setInvitesOpen(true) : null}
+      />
+      <MessageList
+        conversationId={conversationId}
+        currentUserId={user.id}
+        isGroup={conversation.type === 'GROUP'}
+      />
       <TypingIndicator
         typingUsers={typingUsers}
         conversation={conversation}
@@ -158,6 +180,13 @@ export const Chat = () => {
         onTypingStart={handleTypingStart}
         onTypingStop={handleTypingStop}
       />
+      {canManageInvites && (
+        <Invites
+          conversationId={conversation.id}
+          open={invitesOpen}
+          onClose={() => setInvitesOpen(false)}
+        />
+      )}
     </div>
   );
 };

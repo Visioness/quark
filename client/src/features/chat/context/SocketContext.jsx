@@ -37,8 +37,12 @@ export const SocketProvider = ({ children }) => {
     if (!accessToken) return;
 
     const fetchConversations = async () => {
-      const result = await getUserConversations();
-      setConversations(result.success ? result.conversations : []);
+      try {
+        const { userConversations } = await getUserConversations();
+        setConversations(userConversations);
+      } catch (error) {
+        setConversations([]);
+      }
     };
     fetchConversations();
   }, [accessToken]);
@@ -124,8 +128,18 @@ export const SocketProvider = ({ children }) => {
       });
     };
 
+    const onDeleteConversation = (conversationId) => {
+      setConversations((prev) =>
+        prev.filter((conv) => conv.id !== conversationId)
+      );
+    };
+
     socket.on('conversation:new', onNewConversation);
-    return () => socket.off('conversation:new', onNewConversation);
+    socket.on('conversation:delete', onDeleteConversation);
+    return () => {
+      socket.off('conversation:new', onNewConversation);
+      socket.off('conversation:delete', onDeleteConversation);
+    };
   }, [isConnected]);
 
   const changeConversation = useCallback((id) => {

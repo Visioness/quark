@@ -19,3 +19,55 @@ export const getMessages = async (
     tokenOverride
   );
 };
+
+export const createGroup = async (groupName, tokenOverride = null) => {
+  return await request(
+    '/groups',
+    { method: 'POST', body: JSON.stringify({ groupName }) },
+    tokenOverride
+  );
+};
+
+export const deleteGroup = async (conversationId, tokenOverride = null) => {
+  return await request(
+    `/groups/${conversationId}`,
+    { method: 'DELETE' },
+    tokenOverride
+  );
+};
+
+export const getInvites = async (groupId, tokenOverride = null) => {
+  return await request(`/groups/${groupId}/invites`, {}, tokenOverride);
+};
+
+export const createInvite = async (groupId, duration, tokenOverride = null) => {
+  return await request(
+    `/groups/${groupId}/invites`,
+    { method: 'POST', body: JSON.stringify({ duration }) },
+    tokenOverride
+  );
+};
+
+export const deleteInvite = async (inviteCode, tokenOverride = null) => {
+  return await request(
+    `/groups/invites/${inviteCode}`,
+    { method: 'DELETE' },
+    tokenOverride
+  );
+};
+
+export const leaveGroup = async (groupId, tokenOverride = null) => {
+  return await request(
+    `/groups/${groupId}/leave`,
+    { method: 'DELETE' },
+    tokenOverride
+  );
+};
+
+export const joinViaInvite = async (inviteCode, tokenOverride = null) => {
+  return await request(
+    `/groups/invites/${inviteCode}`,
+    { method: 'POST' },
+    tokenOverride
+  );
+};
