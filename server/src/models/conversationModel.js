@@ -4,6 +4,7 @@ const conversationInclude = {
   participants: {
     select: {
       userId: true,
+      role: true,
       lastReadAt: true,
       user: {
         select: {
@@ -12,14 +13,24 @@ const conversationInclude = {
       },
     },
   },
+  messages: {
+    take: 1,
+    orderBy: { createdAt: 'desc' },
+  },
 };
 
 const getConversation = async (conversationId) => {
   return await prisma.conversation.findUnique({
-    where: {
-      id: conversationId,
-    },
+    where: { id: conversationId },
     include: conversationInclude,
+  });
+};
+
+const getGroup = async (groupName, ownerId) => {
+  return await prisma.conversation.findUnique({
+    where: {
+      ownerId_name: { name: groupName, ownerId },
+    },
   });
 };
 
@@ -39,6 +50,7 @@ const getUserConversations = async (userId) => {
     where: {
       participants: { some: { userId } },
     },
+    orderBy: { lastMessageAt: 'desc' },
     include: {
       messages: {
         take: 1,
@@ -61,10 +73,18 @@ const getUserConversations = async (userId) => {
   });
 };
 
+const updateLastMessageAt = async (conversationId) => {
+  return await prisma.conversation.update({
+    where: { id: conversationId },
+    data: { lastMessageAt: new Date() },
+  });
+};
+
 const getMessages = async (conversationId, { cursor, limit = 30 }) => {
   const messages = await prisma.message.findMany({
     where: { conversationId },
     orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    include: { sender: { select: { username: true } } },
     take: limit + 1,
     ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
   });
@@ -78,10 +98,92 @@ const getMessages = async (conversationId, { cursor, limit = 30 }) => {
   };
 };
 
-const getParticipant = async (conversationId, userId) => {
+const createDM = async (userId, friendId) => {
+  return await prisma.conversation.create({
+    data: {
+      participants: {
+        create: [{ userId: userId }, { userId: friendId }],
+      },
+    },
+    include: conversationInclude,
+  });
+};
+
+const createGroup = async (groupName, userId) => {
+  return await prisma.conversation.create({
+    data: {
+      type: 'GROUP',
+      name: groupName,
+      ownerId: userId,
+      participants: {
+        create: [{ userId, role: 'OWNER' }],
+      },
+    },
+    include: conversationInclude,
+  });
+};
+
+const createMessage = async (conversationId, content, senderId) => {
+  return await prisma.message.create({
+    data: { conversationId, content, senderId },
+    include: { sender: { select: { username: true } } },
+  });
+};
+
+const verifyConversation = async (conversationId) => {
+  return await prisma.conversation.findUnique({
+    where: { id: conversationId },
+  });
+};
+
+const verifyParticipant = async (conversationId, userId) => {
   return await prisma.conversationParticipant.findUnique({
     where: { conversationId_userId: { conversationId, userId } },
   });
+};
+
+const joinGroup = async (conversationId, userId) => {
+  return await prisma.conversationParticipant.create({
+    data: {
+      conversationId,
+      userId,
+    },
+    include: {
+      conversation: {
+        include: {
+          messages: {
+            take: 1,
+            orderBy: { createdAt: 'desc' },
+          },
+        },
+      },
+    },
+  });
+};
+
+const leaveGroup = async (conversationId, userId) => {
+  return await prisma.conversationParticipant.delete({
+    where: { conversationId_userId: { conversationId, userId } },
+  });
+};
+
+const deleteGroup = async (conversationId) => {
+  return await prisma.conversation.delete({
+    where: { id: conversationId },
+  });
+};
+
+const transferOwnership = async (conversationId, previousId, nextId) => {
+  return await prisma.$transaction([
+    prisma.conversationParticipant.update({
+      where: { conversationId_userId: { conversationId, userId: previousId } },
+      data: { role: 'MEMBER' },
+    }),
+    prisma.conversationParticipant.update({
+      where: { conversationId_userId: { conversationId, userId: nextId } },
+      data: { role: 'OWNER' },
+    }),
+  ]);
 };
 
 const getUnreadCounts = async (conversationIds, userId) => {
@@ -98,34 +200,10 @@ const getUnreadCounts = async (conversationIds, userId) => {
   `;
 };
 
-const createConversation = async (userId, friendId) => {
-  return await prisma.conversation.create({
-    data: {
-      participants: {
-        create: [{ userId: userId }, { userId: friendId }],
-      },
-    },
-    include: conversationInclude,
-  });
-};
-
-const createMessage = async (conversationId, content, senderId) => {
-  return await prisma.message.create({
-    data: {
-      conversationId,
-      content,
-      senderId,
-    },
-  });
-};
-
 const markAsRead = async (conversationId, userId) => {
   return await prisma.conversationParticipant.update({
     where: {
-      conversationId_userId: {
-        conversationId,
-        userId,
-      },
+      conversationId_userId: { conversationId, userId },
     },
     data: {
       lastReadAt: new Date(),
@@ -135,12 +213,20 @@ const markAsRead = async (conversationId, userId) => {
 
 export {
   getConversation,
+  getGroup,
   getPreviousConversation,
   getUserConversations,
+  updateLastMessageAt,
   getMessages,
-  getParticipant,
   getUnreadCounts,
-  createConversation,
+  createDM,
+  createGroup,
   createMessage,
+  verifyParticipant,
+  verifyConversation,
+  joinGroup,
+  leaveGroup,
+  deleteGroup,
+  transferOwnership,
   markAsRead,
 };

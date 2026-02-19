@@ -52,6 +52,16 @@ export const initSocket = (io) => {
     });
   });
 
+  appEvents.on('conversation:deleted', ({ conversationId }) => {
+    io.to(conversationId).emit('conversation:delete', conversationId);
+    io.in(conversationId).socketsLeave(conversationId);
+  });
+
+  appEvents.on('conversation:left', ({ conversationId, userId }) => {
+    io.to(userId).emit('conversation:delete', conversationId);
+    io.in(userId).socketsLeave(conversationId);
+  });
+
   io.on('connection', async (socket) => {
     const userId = socket.user.id;
     socket.join(userId);

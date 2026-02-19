@@ -41,7 +41,7 @@ const sendFriendRequest = async (senderId, username) => {
             );
 
           if (!previousConversation) {
-            const conversation = await conversationService.createConversation(
+            const conversation = await conversationService.createDM(
               senderId,
               receiver.id
             );
@@ -107,7 +107,7 @@ const acceptFriendRequest = async (senderId, receiverId) => {
     await conversationService.getPreviousConversation(senderId, receiverId);
 
   if (!previousConversation) {
-    const conversation = await conversationService.createConversation(
+    const conversation = await conversationService.createDM(
       senderId,
       receiverId
     );

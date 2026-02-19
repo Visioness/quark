@@ -47,7 +47,7 @@ const getMessages = async (conversationId, userId, { cursor, limit = 30 }) => {
   return await conversationModel.getMessages(conversationId, { cursor, limit });
 };
 
-const createConversation = async (userId, friendId) => {
+const createDM = async (userId, friendId) => {
   const friendship = await friendModel.findFriendship(userId, friendId);
 
   if (!friendship) {
@@ -56,7 +56,7 @@ const createConversation = async (userId, friendId) => {
     throw error;
   }
 
-  return await conversationModel.createConversation(userId, friendId);
+  return await conversationModel.createDM(userId, friendId);
 };
 
 const createMessage = async (conversationId, content, senderId) => {
@@ -67,6 +67,8 @@ const createMessage = async (conversationId, content, senderId) => {
     error.statusCode = 400;
     throw error;
   }
+
+  await conversationModel.updateLastMessageAt(conversationId);
 
   return await conversationModel.createMessage(
     conversationId,
@@ -81,17 +83,31 @@ const markAsRead = async (conversationId, userId) => {
   return await conversationModel.markAsRead(conversationId, userId);
 };
 
+const verifyConversation = async (conversationId, isGroup = false) => {
+  const conversation = await conversationModel.verifyConversation(
+    conversationId
+  );
+
+  if (!conversation) {
+    const error = new Error(`${isGroup ? 'Group' : 'Conversation'} not found.`);
+    error.statusCode = 404;
+    throw error;
+  }
+};
+
 const verifyParticipant = async (conversationId, userId) => {
-  const participant = await conversationModel.getParticipant(
+  const participant = await conversationModel.verifyParticipant(
     conversationId,
     userId
   );
 
   if (!participant) {
-    const error = new Error('Conversation not found.');
-    error.statusCode = 404;
+    const error = new Error('Not a member in this conversation.');
+    error.statusCode = 403;
     throw error;
   }
+
+  return participant;
 };
 
 export {
@@ -99,7 +115,9 @@ export {
   getPreviousConversation,
   getUserConversations,
   getMessages,
-  createConversation,
+  createDM,
   createMessage,
   markAsRead,
+  verifyConversation,
+  verifyParticipant,
 };

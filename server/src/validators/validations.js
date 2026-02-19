@@ -71,4 +71,27 @@ const paginationValidation = [
     .toInt(),
 ];
 
-export { logInValidation, signUpValidation, paginationValidation };
+const groupValidation = [
+  body('groupName')
+    .trim()
+    .notEmpty()
+    .withMessage('Group name can not be empty.')
+    .isLength({ min: 3, max: 20 })
+    .withMessage('Group name must be between 3 - 20 characters length.'),
+];
+
+const durationValidation = [
+  body('duration')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Duration must be a positive integer.')
+    .toInt(),
+];
+
+export {
+  logInValidation,
+  signUpValidation,
+  paginationValidation,
+  groupValidation,
+  durationValidation,
+};

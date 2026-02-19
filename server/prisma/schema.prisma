@@ -31,6 +31,9 @@ model User {
 
   conversationParticipants ConversationParticipant[]
   sentMessages             Message[]
+
+  ownedGroups    Conversation[]
+  createdInvites GroupInviteLink[]
 }
 
 model RefreshToken {
@@ -60,13 +63,21 @@ model FriendRequest {
 }
 
 model Conversation {
-  id        String           @id @default(cuid(2))
-  type      ConversationType @default(PRIVATE)
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+  id            String           @id @default(cuid(2))
+  type          ConversationType @default(PRIVATE)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @default(now())
+  lastMessageAt DateTime?
 
   participants ConversationParticipant[]
   messages     Message[]
+
+  name        String?
+  inviteLinks GroupInviteLink[]
+  ownerId     String?
+  owner       User?             @relation(fields: [ownerId], references: [id], onDelete: NoAction, onUpdate: Cascade)
+
+  @@unique([ownerId, name])
 }
 
 model ConversationParticipant {
@@ -78,6 +89,8 @@ model ConversationParticipant {
 
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  role ParticipantRole @default(MEMBER)
 
   @@unique([conversationId, userId])
   @@index([userId])
@@ -98,6 +111,22 @@ model Message {
   @@index([senderId])
 }
 
+model GroupInviteLink {
+  id             String    @id @default(cuid(2))
+  conversationId String
+  code           String    @unique @default(nanoid(10))
+  createdBy      String
+  createdAt      DateTime  @default(now())
+  expiresAt      DateTime?
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  creator      User         @relation(fields: [createdBy], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([code])
+  @@index([conversationId])
+  @@index([expiresAt])
+}
+
 enum ProfileStatus {
   PUBLIC
   HIDDEN
@@ -111,4 +140,11 @@ enum RequestStatus {
 
 enum ConversationType {
   PRIVATE
+  GROUP
+}
+
+enum ParticipantRole {
+  OWNER
+  ADMIN
+  MEMBER
 }
