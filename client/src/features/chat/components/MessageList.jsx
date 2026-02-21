@@ -1,14 +1,18 @@
 import { useMemo, useRef } from 'react';
-import { useFetchMessages } from '../queries/useConversations';
-import { getMessagesFromInfiniteData } from '../queries/messageCacheHelpers';
+import { useFetchMessages } from '@/features/chat/queries/useConversations';
+import { getMessagesFromInfiniteData } from '@/features/chat/queries/messageCacheHelpers';
 import { LoadingSpinner } from '@/components/ui';
-import { useInfiniteScrollTop, useScrollPositionPreserver } from '../hooks';
+import {
+  useInfiniteScrollTop,
+  useScrollPositionPreserver,
+} from '@/features/chat/hooks';
+import { Message } from '@/features/chat/components';
 
 export const MessageList = ({ conversationId, currentUserId, isGroup }) => {
   const { data, fetchPreviousPage, hasPreviousPage, isFetchingPreviousPage } =
     useFetchMessages(conversationId);
-
   const messages = useMemo(() => getMessagesFromInfiniteData(data), [data]);
+
   const chatRef = useRef(null);
   const topSentinelRef = useInfiniteScrollTop(
     chatRef,
@@ -27,30 +31,51 @@ export const MessageList = ({ conversationId, currentUserId, isGroup }) => {
       </div>
 
       <ul className='messages h-full px-4 py-8 space-y-4'>
-        {messages.map((message) => (
-          <li
-            key={message.id}
-            className={`message flex flex-col gap-1 ${
-              message.senderId === currentUserId ? 'items-end' : 'items-start'
-            }`}>
-            {isGroup && (
-              <span className='translate-y-1 username text-sm font-bold text-card-foreground/70'>
-                {message.sender.username}
-              </span>
-            )}
-            <p
-              lang='en'
-              className={`content px-4 py-2 w-fit max-w-[85%] sm:max-w-[75%] border whitespace-pre-wrap wrap-anywhere ${
-                message.senderId === currentUserId
-                  ? message?._status === 'sending'
-                    ? 'bg-muted text-muted-foreground border-border rounded-b-xl rounded-tr-sm rounded-tl-xl'
-                    : 'bg-primary/50 text-primary-foreground border-primary rounded-b-xl rounded-tr-sm rounded-tl-xl'
-                  : 'bg-card text-card-foreground border-border rounded-b-xl rounded-tr-xl rounded-tl-sm'
-              }`}>
-              {message.content}
-            </p>
-          </li>
-        ))}
+        {messages.reduce((acc, message, index) => {
+          const currentDate = new Date(message.createdAt).toLocaleDateString(
+            undefined,
+            {
+              month: 'long',
+              year: 'numeric',
+              day: 'numeric',
+            }
+          );
+          const previousDate =
+            index > 0
+              ? new Date(messages[index - 1].createdAt).toLocaleDateString(
+                  undefined,
+                  {
+                    month: 'long',
+                    year: 'numeric',
+                    day: 'numeric',
+                  }
+                )
+              : null;
+
+          if (currentDate !== previousDate) {
+            acc.push(
+              <li
+                key={`date-${message.id}`}
+                className='relative flex justify-center my-4'>
+                <hr className='absolute top-1/2 z-10 w-full border-dashed border-border' />
+                <span className='relative z-20 text-xs font-semibold text-card-foreground/80 bg-card px-3 py-1 rounded-full border border-border'>
+                  {currentDate}
+                </span>
+              </li>
+            );
+          }
+
+          acc.push(
+            <Message
+              key={message.id}
+              message={message}
+              isGroupMessage={isGroup}
+              currentUserId={currentUserId}
+            />
+          );
+
+          return acc;
+        }, [])}
       </ul>
     </main>
   );

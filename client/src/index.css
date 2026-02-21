@@ -2,7 +2,8 @@
 
 @layer utilities {
   textarea,
-  main {
+  main,
+  .scroll {
     scrollbar-gutter: stable;
     scrollbar-width: thin;
     scrollbar-color: var(--muted) transparent;

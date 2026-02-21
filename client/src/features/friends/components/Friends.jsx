@@ -1,15 +1,27 @@
+import { useCallback } from 'react';
 import { Link } from 'react-router';
 import { MessageSquare, UserMinus, Users } from 'lucide-react';
-import { useSocket } from '@/features/chat/context';
+import { useConversationList } from '@/features/chat/queries/useConversations';
 import { Button, LoadingSpinner } from '@/components/ui';
 import { useFriendList, useRemoveFriend } from '../queries/useFriends';
 
 export const Friends = () => {
-  const { findPrivateConversation } = useSocket();
+  const { data: conversations = [] } = useConversationList();
   const { isPending, isError, data, error } = useFriendList();
   const removeFriendMutation = useRemoveFriend();
 
   const friends = data?.friends;
+
+  const findPrivateConversation = useCallback(
+    (friendId) => {
+      return conversations.find(
+        (conv) =>
+          conv.type === 'PRIVATE' &&
+          conv.participants.some((p) => p.userId === friendId)
+      )?.id;
+    },
+    [conversations]
+  );
 
   return (
     <div className='w-full max-w-xl mx-auto flex flex-col px-4 py-2 space-y-6'>
@@ -28,7 +40,7 @@ export const Friends = () => {
 
         {!isPending && friends && (
           <div className='w-full'>
-            {friends.length > 0 ? (
+            {friends.length > 0 ?
               <div className='space-y-3'>
                 <h4 className='text-sm font-medium text-muted-foreground ml-1 mb-2'>
                   My Friends ({friends.length})
@@ -73,8 +85,7 @@ export const Friends = () => {
                   })}
                 </ul>
               </div>
-            ) : (
-              <div className='flex flex-col items-center justify-center py-12 text-muted-foreground/50'>
+            : <div className='flex flex-col items-center justify-center py-12 text-muted-foreground/50'>
                 <div className='w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center mb-4'>
                   <Users className='w-8 h-8' strokeWidth={1.5} />
                 </div>
@@ -85,7 +96,7 @@ export const Friends = () => {
                   Go to Requests to find people
                 </p>
               </div>
-            )}
+            }
           </div>
         )}
       </div>

@@ -1,1 +1,10 @@
 export { Chat } from './Chat';
+export { ChatHeader } from './ChatHeader';
+export { MessageInput } from './MessageInput';
+export { MessageList } from './MessageList';
+export { TypingIndicator } from './TypingIndicator';
+export { Invites } from './Invites';
+export { Message } from './Message';
+export { MessageSender } from './MessageSender';
+export { MessageTimestamp } from './MessageTimestamp';
+export { MessageContent } from './MessageContent';

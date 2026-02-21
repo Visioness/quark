@@ -1,34 +1,22 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router';
-import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/features/auth/context';
 import { useSocket } from '@/features/chat/context';
 import {
-  conversationKeys,
   useFetchConversation,
   useSendMessage,
 } from '@/features/chat/queries/useConversations';
-import {
-  appendMessageToLastPage,
-  hasMessageInInfiniteData,
-} from '@/features/chat/queries/messageCacheHelpers';
 import { LoadingSpinner } from '@/components/ui';
-import { ChatHeader } from './ChatHeader';
-import { MessageList } from './MessageList';
-import { MessageInput } from './MessageInput';
-import { TypingIndicator } from './TypingIndicator';
-import { Invites } from './Invites';
+import { ChatHeader } from '@/features/chat/components';
+import { MessageList } from '@/features/chat/components';
+import { MessageInput } from '@/features/chat/components';
+import { TypingIndicator } from '@/features/chat/components';
+import { Invites } from '@/features/chat/components';
 
 export const Chat = () => {
   const { conversationId } = useParams();
-  const queryClient = useQueryClient();
   const { user } = useAuth();
-  const {
-    isConnected,
-    socket,
-    changeConversation,
-    updateConversationOnMessage,
-  } = useSocket();
+  const { isConnected, socket, changeConversation } = useSocket();
 
   const {
     isPending,
@@ -37,11 +25,7 @@ export const Chat = () => {
     error,
   } = useFetchConversation(conversationId);
 
-  const sendMessageMutation = useSendMessage({
-    socket,
-    user,
-    updateConversationOnMessage,
-  });
+  const sendMessageMutation = useSendMessage({ socket, user });
 
   const [typingUsers, setTypingUsers] = useState([]);
   const [invitesOpen, setInvitesOpen] = useState(false);
@@ -58,52 +42,35 @@ export const Chat = () => {
 
   useEffect(() => {
     setInvitesOpen(false);
+    setTypingUsers([]);
   }, [conversationId]);
 
+  // Typing indicators
   useEffect(() => {
     if (!isConnected) return;
 
-    const onTypingStart = (userId) => {
+    const onTypingStart = (convId, userId) => {
+      if (convId !== conversationId) return;
       setTypingUsers((prev) => {
-        if (!prev.includes(userId)) {
-          return [...prev, userId];
+        if (prev.includes(userId)) {
+          return prev;
         }
-        return prev;
+        return [...prev, userId];
       });
     };
     socket.on('conversation:typing:start', onTypingStart);
 
-    const onTypingStop = (userId) => {
+    const onTypingStop = (convId, userId) => {
+      if (convId !== conversationId) return;
       setTypingUsers((prev) => prev.filter((id) => id !== userId));
     };
-    socket.on('conversation:typing:stop', onTypingStop);
 
+    socket.on('conversation:typing:stop', onTypingStop);
     return () => {
       socket.off('conversation:typing:start', onTypingStart);
       socket.off('conversation:typing:stop', onTypingStop);
     };
-  }, [socket, isConnected]);
-
-  // Update cache with received message
-  useEffect(() => {
-    if (!isConnected) return;
-
-    const onMessage = (message) => {
-      if (message.conversationId !== conversationId) return;
-
-      queryClient.setQueryData(
-        conversationKeys.messages(conversationId),
-        (old) => {
-          if (!old) return old;
-          if (hasMessageInInfiniteData(old, message.id)) return old;
-          return appendMessageToLastPage(old, message);
-        }
-      );
-    };
-
-    socket.on('message:receive', onMessage);
-    return () => socket.off('message:receive', onMessage);
-  }, [socket, isConnected, conversationId, queryClient]);
+  }, [conversationId, socket, isConnected]);
 
   // Mark as read on conversation load
   useEffect(() => {
@@ -115,7 +82,12 @@ export const Chat = () => {
       socket.emit('conversation:read', loadedConversationId);
     }
 
-    return () => changeConversation(null);
+    return () => {
+      changeConversation(null);
+      if (isConnected) {
+        socket.emit('conversation:typing:stop', loadedConversationId);
+      }
+    };
   }, [socket, isConnected, changeConversation, loadedConversationId]);
 
   // Optimistic update with mutation
@@ -123,7 +95,6 @@ export const Chat = () => {
     if (!conversation?.id) return;
     sendMessageMutation.mutate({ conversationId: conversation.id, content });
   };
-
   const handleTypingStart = () =>
     socket.emit('conversation:typing:start', conversationId);
   const handleTypingStop = () =>
@@ -176,6 +147,7 @@ export const Chat = () => {
         currentUserId={user.id}
       />
       <MessageInput
+        key={conversationId}
         onSend={handleSend}
         onTypingStart={handleTypingStart}
         onTypingStop={handleTypingStop}

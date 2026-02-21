@@ -4,14 +4,20 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-import { getConversation, getMessages } from '@/services/conversation.service';
+import {
+  getConversation,
+  getMessages,
+  getUserConversations,
+} from '@/services/conversation.service';
 import {
   appendMessageToLastPage,
+  moveConversationToTop,
   replaceMessageInLastPage,
 } from './messageCacheHelpers';
 
 export const conversationKeys = {
   all: () => ['conversations'],
+  list: () => [...conversationKeys.all(), 'list'],
   detail: (id) => [...conversationKeys.all(), id],
   messages: (id) => [...conversationKeys.detail(id), 'messages'],
 };
@@ -28,6 +34,17 @@ const emitMessageWithAck = ({ socket, conversationId, content }) =>
       }
     });
   });
+
+export const useConversationList = (enabled = true) => {
+  return useQuery({
+    queryKey: conversationKeys.list(),
+    enabled,
+    queryFn: async () => {
+      const result = await getUserConversations();
+      return result.conversations;
+    },
+  });
+};
 
 export const useFetchConversation = (conversationId) => {
   return useQuery({
@@ -47,7 +64,9 @@ export const useFetchMessages = (conversationId) => {
   return useInfiniteQuery({
     enabled: Boolean(conversationId),
     queryKey: conversationKeys.messages(conversationId),
+    initialPageParam: undefined,
     refetchOnWindowFocus: false,
+    gcTime: 0,
     queryFn: async ({ pageParam }) => {
       const params = new URLSearchParams();
       if (pageParam) params.set('cursor', pageParam);
@@ -59,11 +78,7 @@ export const useFetchMessages = (conversationId) => {
   });
 };
 
-export const useSendMessage = ({
-  socket,
-  user,
-  updateConversationOnMessage,
-}) => {
+export const useSendMessage = ({ socket, user }) => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -114,7 +129,11 @@ export const useSendMessage = ({
         (old) => replaceMessageInLastPage(old, context.tempId, serverMessage)
       );
 
-      updateConversationOnMessage(serverMessage);
+      queryClient.setQueryData(conversationKeys.list(), (old) =>
+        moveConversationToTop(old, context.conversationId, {
+          messages: [serverMessage],
+        })
+      );
     },
   });
 };

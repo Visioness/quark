@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Send } from 'lucide-react';
 import { Button } from '@/components/ui';
 
@@ -8,6 +8,10 @@ export const MessageInput = ({ onSend, onTypingStart, onTypingStop }) => {
   const isTyping = useRef(false);
   const typingTimer = useRef(null);
   const TYPING_TIMEOUT = 3000;
+
+  useEffect(() => {
+    return () => clearTimeout(typingTimer.current);
+  }, []);
 
   const handleInput = (e) => {
     if (inputRef.current) {

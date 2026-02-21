@@ -7,20 +7,21 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { socket } from '@/socket';
 import { useAuth } from '@/features/auth/context';
-import { getUserConversations } from '@/services/conversation.service';
+import { useSocketEvents } from '@/features/chat/hooks';
+import { conversationKeys } from '@/features/chat/queries/useConversations';
 
 const SocketContext = createContext({
   socket: null,
   isConnected: false,
-  conversations: [],
 });
 
 export const SocketProvider = ({ children }) => {
   const { accessToken, refreshtoken } = useAuth();
+  const queryClient = useQueryClient();
   const [isConnected, setIsConnected] = useState(false);
-  const [conversations, setConversations] = useState([]);
   const [activeConversation, setActiveConversation] = useState(null);
   const activeConversationRef = useRef(null);
   const refreshRef = useRef(refreshtoken);
@@ -33,40 +34,7 @@ export const SocketProvider = ({ children }) => {
     activeConversationRef.current = activeConversation;
   }, [activeConversation]);
 
-  useEffect(() => {
-    if (!accessToken) return;
-
-    const fetchConversations = async () => {
-      try {
-        const { userConversations } = await getUserConversations();
-        setConversations(userConversations);
-      } catch (error) {
-        setConversations([]);
-      }
-    };
-    fetchConversations();
-  }, [accessToken]);
-
-  const updateConversationOnMessage = useCallback((message) => {
-    const id = message.conversationId;
-    setConversations((prev) => {
-      const existing = prev.find((conv) => conv.id === id);
-      if (!existing) return prev;
-
-      const rest = prev.filter((conv) => conv.id !== id);
-      const isActive = activeConversationRef.current === id;
-
-      return [
-        {
-          ...existing,
-          unread: isActive ? 0 : (existing.unread || 0) + 1,
-          messages: [message],
-        },
-        ...rest,
-      ];
-    });
-  }, []);
-
+  // Socket lifecycle: connect/disconnect/auth
   useEffect(() => {
     if (!accessToken) {
       socket.disconnect();
@@ -78,12 +46,10 @@ export const SocketProvider = ({ children }) => {
     const onConnect = () => setIsConnected(true);
     const onError = (err) => console.error('Socket server error:', err.message);
     const onDisconnect = () => setIsConnected(false);
-    const onMessage = (message) => updateConversationOnMessage(message);
 
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
     socket.on('error:server', onError);
-    socket.on('message:receive', onMessage);
 
     if (!socket.connected) {
       socket.connect();
@@ -93,11 +59,11 @@ export const SocketProvider = ({ children }) => {
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
       socket.off('error:server', onError);
-      socket.off('message:receive', onMessage);
       socket.disconnect();
     };
-  }, [accessToken, updateConversationOnMessage]);
+  }, [accessToken]);
 
+  // Handle connection errors & token refresh
   useEffect(() => {
     const onConnectError = async (error) => {
       console.error('Socket connection error: ', error.message);
@@ -118,66 +84,42 @@ export const SocketProvider = ({ children }) => {
     return () => socket.off('connect_error', onConnectError);
   }, []);
 
+  // Fetch conversations into React Query cache when connected
   useEffect(() => {
-    if (!isConnected) return;
+    if (!accessToken) return;
 
-    const onNewConversation = (conversation) => {
-      setConversations((prev) => {
-        if (prev.some((c) => c.id === conversation.id)) return prev;
-        return [{ ...conversation, unread: 0 }, ...prev];
-      });
-    };
+    queryClient.invalidateQueries({
+      queryKey: conversationKeys.list(),
+    });
+  }, [accessToken, queryClient]);
 
-    const onDeleteConversation = (conversationId) => {
-      setConversations((prev) =>
-        prev.filter((conv) => conv.id !== conversationId)
-      );
-    };
+  // Centralized socket event handlers (updates React Query cache)
+  useSocketEvents(socket, isConnected, activeConversationRef);
 
-    socket.on('conversation:new', onNewConversation);
-    socket.on('conversation:delete', onDeleteConversation);
-    return () => {
-      socket.off('conversation:new', onNewConversation);
-      socket.off('conversation:delete', onDeleteConversation);
-    };
-  }, [isConnected]);
-
-  const changeConversation = useCallback((id) => {
-    setActiveConversation(id);
-    if (id) {
-      setConversations((prev) =>
-        prev.map((conv) => (conv.id === id ? { ...conv, unread: 0 } : conv))
-      );
-    }
-  }, []);
-
-  const findPrivateConversation = useCallback(
-    (friendId) => {
-      return conversations.find(
-        (conv) =>
-          conv.type === 'PRIVATE' &&
-          conv.participants.some((p) => p.userId === friendId)
-      )?.id;
+  const changeConversation = useCallback(
+    (id) => {
+      setActiveConversation(id);
+      if (id) {
+        // Reset unread for the conversation being opened
+        queryClient.setQueryData(conversationKeys.list(), (old) => {
+          if (!Array.isArray(old)) return old;
+          return old.map((conv) =>
+            conv.id === id ? { ...conv, unread: 0 } : conv
+          );
+        });
+      }
     },
-    [conversations]
+    [queryClient]
   );
 
   const value = useMemo(
     () => ({
       socket,
       isConnected,
-      conversations,
+      activeConversation,
       changeConversation,
-      findPrivateConversation,
-      updateConversationOnMessage,
     }),
-    [
-      isConnected,
-      conversations,
-      changeConversation,
-      findPrivateConversation,
-      updateConversationOnMessage,
-    ]
+    [isConnected, activeConversation, changeConversation]
   );
 
   return (
