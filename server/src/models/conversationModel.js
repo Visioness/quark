@@ -57,6 +57,9 @@ const getUserConversations = async (userId) => {
         orderBy: {
           createdAt: 'desc',
         },
+        include: {
+          sender: true,
+        },
       },
       participants: {
         select: {
@@ -123,9 +126,9 @@ const createGroup = async (groupName, userId) => {
   });
 };
 
-const createMessage = async (conversationId, content, senderId) => {
+const createMessage = async (type, conversationId, content, senderId) => {
   return await prisma.message.create({
-    data: { conversationId, content, senderId },
+    data: { type, conversationId, content, senderId },
     include: { sender: { select: { username: true } } },
   });
 };
@@ -157,6 +160,7 @@ const joinGroup = async (conversationId, userId) => {
           },
         },
       },
+      user: { select: { username: true } },
     },
   });
 };

@@ -97,12 +97,13 @@ model ConversationParticipant {
 }
 
 model Message {
-  id             String   @id @default(cuid(2))
+  id             String      @id @default(cuid(2))
+  type           MessageType @default(TEXT)
   conversationId String
   content        String
   senderId       String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
@@ -147,4 +148,10 @@ enum ParticipantRole {
   OWNER
   ADMIN
   MEMBER
+}
+
+enum MessageType {
+  TEXT
+  USER_JOINED
+  USER_LEFT
 }

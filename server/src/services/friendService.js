@@ -46,9 +46,21 @@ const sendFriendRequest = async (senderId, username) => {
               receiver.id
             );
 
-            appEvents.emit('conversation:created', {
+            const messages = await Promise.all(
+              conversation.participants.map((p) =>
+                conversationService.createMessage(
+                  'USER_JOINED',
+                  conversation.id,
+                  'joined the chat.',
+                  p.userId
+                )
+              )
+            );
+
+            appEvents.emit('conversation:join', {
               conversation,
-              participantIds: [senderId, receiver.id],
+              participants: conversation.participants,
+              messages,
             });
           }
 
@@ -112,9 +124,21 @@ const acceptFriendRequest = async (senderId, receiverId) => {
       receiverId
     );
 
-    appEvents.emit('conversation:created', {
+    const messages = await Promise.all(
+      conversation.participants.map((p) =>
+        conversationService.createMessage(
+          'USER_JOINED',
+          conversation.id,
+          'joined the chat.',
+          p.userId
+        )
+      )
+    );
+
+    appEvents.emit('conversation:join', {
       conversation,
-      participantIds: [senderId, receiverId],
+      participants: conversation.participants,
+      messages,
     });
   }
 

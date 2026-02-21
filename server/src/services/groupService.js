@@ -1,4 +1,5 @@
 import {
+  createMessage,
   verifyConversation,
   verifyParticipant,
 } from '../services/conversationService.js';
@@ -18,9 +19,17 @@ const createGroup = async (groupName, userId) => {
 
   const conversation = await conversationModel.createGroup(groupName, userId);
 
-  appEvents.emit('conversation:created', {
+  const message = await createMessage(
+    'USER_JOINED',
+    conversation.id,
+    'joined the chat.',
+    userId
+  );
+
+  appEvents.emit('conversation:join', {
     conversation,
-    participantIds: [userId],
+    participants: conversation.participants,
+    messages: [message],
   });
 
   return conversation;
@@ -36,7 +45,7 @@ const deleteGroup = async (groupId, userId) => {
     throw error;
   }
 
-  appEvents.emit('conversation:deleted', { conversationId: groupId });
+  appEvents.emit('conversation:delete', { conversationId: groupId });
   await conversationModel.deleteGroup(groupId);
 };
 
@@ -53,11 +62,24 @@ const joinGroup = async (groupId, userId) => {
     throw error;
   }
 
-  const { conversation } = await conversationModel.joinGroup(groupId, userId);
+  const { conversation, ...newParticipant } = await conversationModel.joinGroup(
+    groupId,
+    userId
+  );
 
-  appEvents.emit('conversation:created', {
+  const { id, conversationId, ...withoutIds } = newParticipant;
+
+  const message = await createMessage(
+    'USER_JOINED',
+    groupId,
+    'joined the chat.',
+    userId
+  );
+
+  appEvents.emit('conversation:join', {
     conversation,
-    participantIds: [userId],
+    participants: [withoutIds],
+    messages: [message],
   });
 
   return conversation;
@@ -74,9 +96,20 @@ const leaveGroup = async (groupId, userId) => {
     throw error;
   }
 
+  const message = await createMessage(
+    'USER_LEFT',
+    groupId,
+    'left the chat.',
+    userId
+  );
+
   await conversationModel.leaveGroup(groupId, userId);
 
-  appEvents.emit('conversation:left', { conversationId: groupId, userId });
+  appEvents.emit('conversation:leave', {
+    conversationId: groupId,
+    participant,
+    message,
+  });
 };
 
 const transferOwnership = async (groupId, previousId, nextId) => {

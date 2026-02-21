@@ -36,39 +36,60 @@ export const initSocket = (io) => {
       next();
     } catch (error) {
       const message =
-        error.name === 'TokenExpiredError'
-          ? 'Token expired.'
-          : 'Invalid token.';
+        error.name === 'TokenExpiredError' ?
+          'Token expired.'
+        : 'Invalid token.';
       const newError = new Error(message);
       newError.statusCode = 401;
       return next(newError);
     }
   });
 
-  appEvents.on('conversation:created', ({ conversation, participantIds }) => {
-    participantIds.forEach((userId) => {
-      io.in(userId).socketsJoin(conversation.id);
-      io.to(userId).emit('conversation:new', conversation);
-    });
-  });
+  appEvents.on(
+    'conversation:join',
+    ({ conversation, participants, messages }) => {
+      participants.forEach((participant) => {
+        io.in(participant.userId).socketsJoin(conversation.id);
+        io.to(participant.userId).emit('conversation:new', conversation);
+        io.to(conversation.id).emit(
+          'conversation:participant:joined',
+          conversation.id,
+          participant
+        );
+      });
 
-  appEvents.on('conversation:deleted', ({ conversationId }) => {
+      messages?.forEach((message) => {
+        io.to(conversation.id).emit('message:receive', message);
+      });
+    }
+  );
+
+  appEvents.on(
+    'conversation:leave',
+    async ({ conversationId, participant, message }) => {
+      io.to(conversationId).emit(
+        'conversation:participant:left',
+        conversationId,
+        participant
+      );
+      io.to(conversationId).emit('message:receive', message);
+
+      io.to(participant.userId).emit('conversation:delete', conversationId);
+      io.in(participant.userId).socketsLeave(conversationId);
+    }
+  );
+
+  appEvents.on('conversation:delete', ({ conversationId }) => {
     io.to(conversationId).emit('conversation:delete', conversationId);
     io.in(conversationId).socketsLeave(conversationId);
-  });
-
-  appEvents.on('conversation:left', ({ conversationId, userId }) => {
-    io.to(userId).emit('conversation:delete', conversationId);
-    io.in(userId).socketsLeave(conversationId);
   });
 
   io.on('connection', async (socket) => {
     const userId = socket.user.id;
     socket.join(userId);
 
-    const conversations = await conversationService.getUserConversations(
-      userId
-    );
+    const conversations =
+      await conversationService.getUserConversations(userId);
     conversations.forEach((conv) => {
       socket.join(conv.id);
     });
@@ -94,6 +115,7 @@ export const initSocket = (io) => {
         }
 
         const message = await conversationService.createMessage(
+          'TEXT',
           conversationId,
           content,
           userId
@@ -127,7 +149,7 @@ export const initSocket = (io) => {
       handleSocketEvent(socket, (conversationId) => {
         socket
           .to(conversationId)
-          .emit('conversation:typing:start', socket.user.id);
+          .emit('conversation:typing:start', conversationId, socket.user.id);
       })
     );
 
@@ -136,8 +158,15 @@ export const initSocket = (io) => {
       handleSocketEvent(socket, (conversationId) => {
         socket
           .to(conversationId)
-          .emit('conversation:typing:stop', socket.user.id);
+          .emit('conversation:typing:stop', conversationId, socket.user.id);
       })
     );
+
+    socket.on('disconnecting', () => {
+      for (const room of socket.rooms) {
+        if (room === userId) continue;
+        socket.to(room).emit('conversation:typing:stop', room, socket.user.id);
+      }
+    });
   });
 };

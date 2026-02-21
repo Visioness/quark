@@ -59,18 +59,21 @@ const createDM = async (userId, friendId) => {
   return await conversationModel.createDM(userId, friendId);
 };
 
-const createMessage = async (conversationId, content, senderId) => {
-  await verifyParticipant(conversationId, senderId);
+const createMessage = async (type, conversationId, content, senderId) => {
+  if (type === 'TEXT') {
+    await verifyParticipant(conversationId, senderId);
 
-  if (content.trim() === '') {
-    const error = new Error('Message content cannot be empty.');
-    error.statusCode = 400;
-    throw error;
+    if (content.trim() === '') {
+      const error = new Error('Message content cannot be empty.');
+      error.statusCode = 400;
+      throw error;
+    }
   }
 
   await conversationModel.updateLastMessageAt(conversationId);
 
   return await conversationModel.createMessage(
+    type,
     conversationId,
     content,
     senderId
