@@ -1,10 +1,11 @@
 import { LoadingSpinner } from './LoadingSpinner';
 
 const variants = {
-  primary: 'bg-primary text-primary-foreground border border-border',
+  primary:
+    'bg-primary/80 text-primary-foreground border border-border hover:bg-primary',
   secondary:
-    'bg-card text-secondary-foreground border border-border hover:bg-secondary',
-  transparent: 'text-foreground',
+    'bg-card text-secondary-foreground/60 border border-border hover:bg-secondary hover:text-secondary-foreground',
+  transparent: 'text-foreground hover:bg-muted',
   destructive: 'text-destructive hover:bg-muted border border-border',
 };
 
@@ -15,25 +16,27 @@ const sizes = {
 };
 
 export const Button = ({
-  type,
-  variant,
-  size,
-  disabled,
+  type = 'button',
+  variant = 'secondary',
+  size = 'md',
   extra,
+  disabled,
   loading,
   onClick,
   children,
 }) => {
-  const variantClass = variants[variant] ?? variants.primary;
-  const sizeClass = sizes[size] ?? sizes.md;
+  const variantClass = variants[variant] ?? variant;
+  const sizeClass = sizes[size] ?? size;
 
   return (
     <button
-      type={type ?? 'button'}
+      type={type}
       disabled={loading || disabled}
       onClick={onClick}
-      className={`button flex justify-center items-center cursor-pointer transition-colors disabled:bg-muted disabled:text-muted-foreground disabled:pointer-events-none ${variantClass} ${sizeClass} ${extra}`}>
-      {loading ? <LoadingSpinner size={size} /> : children}
+      className={`button flex justify-center items-center cursor-pointer font-semibold transition-colors disabled:bg-muted disabled:text-muted-foreground disabled:pointer-events-none ${variantClass} ${sizeClass} ${extra}`}>
+      {loading ?
+        <LoadingSpinner size={size} />
+      : children}
     </button>
   );
 };

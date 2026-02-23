@@ -132,6 +132,7 @@ export const useSendMessage = ({ socket, user }) => {
       queryClient.setQueryData(conversationKeys.list(), (old) =>
         moveConversationToTop(old, context.conversationId, {
           messages: [serverMessage],
+          unread: 0,
         })
       );
     },

@@ -16,13 +16,13 @@ export const Sidebar = ({ isVisible, onClose }) => {
   return (
     <>
       <aside
-        className={`fixed sm:static sm:translate-x-0 sm:w-64 h-screen w-screen z-50 bg-sidebar text-sidebar-foreground border-r border-border flex flex-col transition-transform duration-300 ${
+        className={`fixed sm:static sm:translate-x-0 sm:w-48 lg:w-64 h-screen w-screen z-60 bg-sidebar text-sidebar-foreground border-r border-border flex flex-col transition-transform duration-400 ease-[cubic-bezier(.56,0,.42,1)] ${
           isVisible ? 'translate-x-0' : '-translate-x-full'
         }`}>
         <div className='p-4 border-b h-14 flex items-center justify-between font-bold text-xl text-sidebar-primary border-border'>
           <span className='text-sidebar-primary'>Quark</span>
           <Button
-            variant='transparent'
+            variant='secondary'
             size='sm'
             extra='sm:hidden rounded-xl w-9 h-9'
             onClick={onClose}>
@@ -49,7 +49,7 @@ export const Sidebar = ({ isVisible, onClose }) => {
             <div className='avatar w-9 h-9 flex items-center justify-center rounded-xl text-lg font-bold pointer-events-none select-none border bg-card border-border text-card-foreground'>
               {user.username.charAt(0).toUpperCase()}
             </div>
-            <span className='username font-semibold text-sm pointer-events-none select-none text-secondary-foreground'>
+            <span className='sm:max-w-16 md:max-w-32 username font-semibold text-sm pointer-events-none select-none text-secondary-foreground truncate'>
               {user.username}
             </span>
           </div>

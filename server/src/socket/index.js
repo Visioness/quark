@@ -47,7 +47,7 @@ export const initSocket = (io) => {
 
   appEvents.on(
     'conversation:join',
-    ({ conversation, participants, messages }) => {
+    async ({ conversation, participants, messages }) => {
       participants.forEach((participant) => {
         io.in(participant.userId).socketsJoin(conversation.id);
         io.to(participant.userId).emit('conversation:new', conversation);
@@ -60,6 +60,23 @@ export const initSocket = (io) => {
 
       messages?.forEach((message) => {
         io.to(conversation.id).emit('message:receive', message);
+      });
+
+      // Initial online statuses for new conversation
+      const onlineUserIds = new Set();
+      const sockets = await io.in(conversation.id).fetchSockets();
+      for (const s of sockets) {
+        onlineUserIds.add(s.user.id);
+      }
+
+      participants.forEach((participant) => {
+        if (onlineUserIds.has(participant.userId)) {
+          // Notify the conversation that the new user is online
+          io.to(conversation.id).emit('user:online', participant.userId);
+        }
+
+        // Notify the user about each online user in the conversation
+        io.to(participant.userId).emit('user:online', [...onlineUserIds]);
       });
     }
   );
@@ -92,7 +109,22 @@ export const initSocket = (io) => {
       await conversationService.getUserConversations(userId);
     conversations.forEach((conv) => {
       socket.join(conv.id);
+      // Online status
+      socket.to(conv.id).emit('user:online', userId);
     });
+
+    const onlineUserIds = new Set();
+
+    for (const conv of conversations) {
+      const sockets = await io.in(conv.id).fetchSockets();
+      for (const s of sockets) {
+        if (s.user.id !== userId) {
+          onlineUserIds.add(s.user.id);
+        }
+      }
+    }
+
+    socket.emit('users:online', [...onlineUserIds]);
 
     socket.on(
       'message:send',
@@ -162,10 +194,19 @@ export const initSocket = (io) => {
       })
     );
 
-    socket.on('disconnecting', () => {
-      for (const room of socket.rooms) {
-        if (room === userId) continue;
+    socket.on('disconnecting', async () => {
+      const rooms = new Set(socket.rooms); // capture before await
+      const sockets = await io.in(userId).fetchSockets();
+      const isLastSocket = sockets.length === 1;
+
+      for (const room of rooms) {
+        if (room === socket.id || room === userId) continue;
+        // Clear typing indicator
         socket.to(room).emit('conversation:typing:stop', room, socket.user.id);
+        // Broadcast offline if this is the last socket
+        if (isLastSocket) {
+          socket.to(room).emit('user:offline', userId);
+        }
       }
     });
   });

@@ -30,23 +30,17 @@ export function useSocketEvents(socket, isConnected, activeConversationRef) {
 
       // Update conversation list: move to top, update last message & unread
       const isActive = activeConversationRef.current === convId;
-      queryClient.setQueryData(conversationKeys.list(), (old) =>
-        moveConversationToTop(old, convId, {
-          unread: isActive ? 0 : undefined,
+      queryClient.setQueryData(conversationKeys.list(), (old) => {
+        const existing = old?.find((conv) => conv.id === convId);
+        return moveConversationToTop(old, convId, {
           messages: [message],
-        })
-      );
-
-      // If not active, increment unread count
-      if (!isActive) {
-        queryClient.setQueryData(conversationKeys.list(), (old) => {
-          if (!Array.isArray(old)) return old;
-          return old.map((conv) =>
-            conv.id === convId ?
-              { ...conv, unread: (conv.unread || 0) + 1 }
-            : conv
-          );
+          unread: isActive ? 0 : (existing?.unread || 0) + 1,
         });
+      });
+
+      // Sync with server so unread count persists correctly across refreshes
+      if (isActive) {
+        socket.emit('conversation:read', convId);
       }
     };
 

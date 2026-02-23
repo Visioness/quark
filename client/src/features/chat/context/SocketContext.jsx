@@ -16,6 +16,8 @@ import { conversationKeys } from '@/features/chat/queries/useConversations';
 const SocketContext = createContext({
   socket: null,
   isConnected: false,
+  changeConversation: () => {},
+  onlineUsers: new Set(),
 });
 
 export const SocketProvider = ({ children }) => {
@@ -23,6 +25,7 @@ export const SocketProvider = ({ children }) => {
   const queryClient = useQueryClient();
   const [isConnected, setIsConnected] = useState(false);
   const [activeConversation, setActiveConversation] = useState(null);
+  const [onlineUsers, setOnlineUsers] = useState(new Set());
   const activeConversationRef = useRef(null);
   const refreshRef = useRef(refreshtoken);
 
@@ -84,6 +87,36 @@ export const SocketProvider = ({ children }) => {
     return () => socket.off('connect_error', onConnectError);
   }, []);
 
+  useEffect(() => {
+    if (!accessToken) return;
+
+    const onInitial = (userIds) => {
+      setOnlineUsers((prev) => new Set([...prev, ...userIds]));
+    };
+
+    const onUserOnline = (userId) => {
+      setOnlineUsers((prev) => new Set(prev).add(userId));
+    };
+
+    const onUserOffline = (userId) => {
+      setOnlineUsers((prev) => {
+        const next = new Set(prev);
+        next.delete(userId);
+        return next;
+      });
+    };
+
+    socket.on('users:online', onInitial);
+    socket.on('user:online', onUserOnline);
+    socket.on('user:offline', onUserOffline);
+
+    return () => {
+      socket.off('users:online', onInitial);
+      socket.off('user:online', onUserOnline);
+      socket.off('user:offline', onUserOffline);
+    };
+  }, [accessToken]);
+
   // Fetch conversations into React Query cache when connected
   useEffect(() => {
     if (!accessToken) return;
@@ -118,8 +151,9 @@ export const SocketProvider = ({ children }) => {
       isConnected,
       activeConversation,
       changeConversation,
+      onlineUsers,
     }),
-    [isConnected, activeConversation, changeConversation]
+    [isConnected, activeConversation, changeConversation, onlineUsers]
   );
 
   return (

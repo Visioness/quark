@@ -4,7 +4,7 @@ import { ThemeToggler } from '@/features/theme/components';
 export const LandingPage = () => {
   return (
     <div className='min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300'>
-      <header className='flex items-center justify-between px-6 py-4 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50'>
+      <header className='flex items-center justify-between px-6 py-4 sticky top-0 z-50'>
         <div className='flex items-center gap-2'>
           <div className='h-8 w-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-bold'>
             Q
@@ -32,10 +32,10 @@ export const LandingPage = () => {
       </header>
 
       <main className='flex-1 flex flex-col items-center justify-center p-8 text-center relative overflow-hidden'>
-        <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl -z-10' />
+        <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-200 h-200 bg-primary/5 rounded-full blur-3xl -z-10' />
 
         <div className='max-w-3xl space-y-8 relative z-10'>
-          <div className='inline-flex items-center rounded-full border px-3 py-1 text-sm font-medium bg-secondary text-secondary-foreground'>
+          <div className='inline-flex items-center rounded-full border px-3 py-1 text-sm font-medium border-border bg-secondary text-secondary-foreground'>
             <span className='flex h-2 w-2 rounded-full bg-primary mr-2'></span>
             v1.0 is now live
           </div>
@@ -65,7 +65,7 @@ export const LandingPage = () => {
         </div>
       </main>
 
-      <footer className='py-8 border-t border-border bg-card/30'>
+      <footer className='py-8'>
         <div className='container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground'>
           <p>&copy; {new Date().getFullYear()} Quark. All rights reserved.</p>
           <div className='flex gap-6'>

@@ -9,8 +9,13 @@ import {
 import { Message } from '@/features/chat/components';
 
 export const MessageList = ({ conversationId, currentUserId, isGroup }) => {
-  const { data, fetchPreviousPage, hasPreviousPage, isFetchingPreviousPage } =
-    useFetchMessages(conversationId);
+  const {
+    data,
+    isPending,
+    fetchPreviousPage,
+    hasPreviousPage,
+    isFetchingPreviousPage,
+  } = useFetchMessages(conversationId);
   const messages = useMemo(() => getMessagesFromInfiniteData(data), [data]);
 
   const chatRef = useRef(null);
@@ -25,12 +30,12 @@ export const MessageList = ({ conversationId, currentUserId, isGroup }) => {
     <main
       ref={chatRef}
       onScroll={handleScroll}
-      className='flex-1 p-2 overflow-y-auto'>
-      <div ref={topSentinelRef}>
-        {isFetchingPreviousPage && <LoadingSpinner size='sm' />}
+      className='min-h-0 flex-1 p-2 overflow-y-auto scroll'>
+      <div ref={topSentinelRef} className='flex items-center justify-center'>
+        {(isFetchingPreviousPage || isPending) && <LoadingSpinner size='md' />}
       </div>
 
-      <ul className='messages h-full px-4 py-8 space-y-4'>
+      <ul className='messages flex-1 px-4 py-8 space-y-4'>
         {messages.reduce((acc, message, index) => {
           const currentDate = new Date(message.createdAt).toLocaleDateString(
             undefined,
@@ -41,16 +46,16 @@ export const MessageList = ({ conversationId, currentUserId, isGroup }) => {
             }
           );
           const previousDate =
-            index > 0
-              ? new Date(messages[index - 1].createdAt).toLocaleDateString(
-                  undefined,
-                  {
-                    month: 'long',
-                    year: 'numeric',
-                    day: 'numeric',
-                  }
-                )
-              : null;
+            index > 0 ?
+              new Date(messages[index - 1].createdAt).toLocaleDateString(
+                undefined,
+                {
+                  month: 'long',
+                  year: 'numeric',
+                  day: 'numeric',
+                }
+              )
+            : null;
 
           if (currentDate !== previousDate) {
             acc.push(

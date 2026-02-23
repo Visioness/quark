@@ -31,7 +31,7 @@ export const Conversations = ({ closeSidebar }) => {
                 onClick={closeSidebar}>
                 <Avatar type={conversation.type} unread={conversation.unread} />
 
-                <div className='max-w-5/7 flex-1 flex flex-col gap-1'>
+                <div className='min-w-0 flex-1 flex flex-col gap-1'>
                   <ConversationName
                     user={user}
                     type={conversation.type}

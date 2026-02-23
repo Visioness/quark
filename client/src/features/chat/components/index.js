@@ -8,3 +8,5 @@ export { Message } from './Message';
 export { MessageSender } from './MessageSender';
 export { MessageTimestamp } from './MessageTimestamp';
 export { MessageContent } from './MessageContent';
+export { MemberList } from './MemberList';
+export { MemberCard } from './MemberCard';

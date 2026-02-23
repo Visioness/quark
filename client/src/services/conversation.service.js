@@ -43,7 +43,7 @@ export const getInvites = async (groupId, tokenOverride = null) => {
 export const createInvite = async (groupId, duration, tokenOverride = null) => {
   return await request(
     `/groups/${groupId}/invites`,
-    { method: 'POST', body: JSON.stringify({ duration }) },
+    { method: 'POST', body: JSON.stringify(duration ? { duration } : {}) },
     tokenOverride
   );
 };

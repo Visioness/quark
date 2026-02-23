@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router';
+import { useOutletContext, useParams } from 'react-router';
 import { useAuth } from '@/features/auth/context';
 import { useSocket } from '@/features/chat/context';
 import {
@@ -7,13 +7,17 @@ import {
   useSendMessage,
 } from '@/features/chat/queries/useConversations';
 import { LoadingSpinner } from '@/components/ui';
-import { ChatHeader } from '@/features/chat/components';
-import { MessageList } from '@/features/chat/components';
-import { MessageInput } from '@/features/chat/components';
-import { TypingIndicator } from '@/features/chat/components';
-import { Invites } from '@/features/chat/components';
+import {
+  ChatHeader,
+  MemberList,
+  MessageList,
+  MessageInput,
+  TypingIndicator,
+  Invites,
+} from '@/features/chat/components';
 
 export const Chat = () => {
+  const { showMembers, onCloseMembers } = useOutletContext();
   const { conversationId } = useParams();
   const { user } = useAuth();
   const { isConnected, socket, changeConversation } = useSocket();
@@ -130,28 +134,38 @@ export const Chat = () => {
   }
 
   return (
-    <div className='chat h-full flex flex-col gap-1 overflow-hidden'>
+    <div className='chat h-full flex flex-col overflow-hidden'>
       <ChatHeader
         conversation={conversation}
         currentUserId={user.id}
         onOpenInvites={canManageInvites ? () => setInvitesOpen(true) : null}
       />
-      <MessageList
-        conversationId={conversationId}
-        currentUserId={user.id}
-        isGroup={conversation.type === 'GROUP'}
-      />
-      <TypingIndicator
-        typingUsers={typingUsers}
-        conversation={conversation}
-        currentUserId={user.id}
-      />
-      <MessageInput
-        key={conversationId}
-        onSend={handleSend}
-        onTypingStart={handleTypingStart}
-        onTypingStop={handleTypingStop}
-      />
+      <div className='relative flex flex-1 min-h-0'>
+        <div className='flex flex-col flex-1 min-h-0'>
+          <MessageList
+            conversationId={conversationId}
+            currentUserId={user.id}
+            isGroup={conversation.type === 'GROUP'}
+          />
+          <TypingIndicator
+            typingUsers={typingUsers}
+            conversation={conversation}
+            currentUserId={user.id}
+          />
+          <MessageInput
+            key={conversationId}
+            onSend={handleSend}
+            onTypingStart={handleTypingStart}
+            onTypingStop={handleTypingStop}
+          />
+        </div>
+        <MemberList
+          participants={conversation.participants}
+          userId={user.id}
+          isVisible={showMembers}
+          onClose={onCloseMembers}
+        />
+      </div>
       {canManageInvites && (
         <Invites
           conversationId={conversation.id}

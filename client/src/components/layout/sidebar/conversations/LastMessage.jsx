@@ -19,7 +19,7 @@ export const LastMessage = ({ messages, unread }) => {
 
   return (
     <p
-      className={`text-xs text-muted-foreground truncate ${
+      className={`text-xs truncate ${
         isUnread ? 'text-secondary-foreground' : 'text-muted-foreground'
       }`}>
       {getMessageContent()}
