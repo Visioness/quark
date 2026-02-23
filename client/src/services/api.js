@@ -1,5 +1,5 @@
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 let refreshPromise = null;
 
@@ -24,7 +24,7 @@ export class ApiError extends Error {
 }
 
 const performTokenRefresh = async () => {
-  const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh`, {
+  const refreshResponse = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -52,7 +52,7 @@ export const request = async (url, options = {}, tokenOverride = null) => {
 
   let response;
   try {
-    response = await fetch(`${API_BASE_URL}${url}`, {
+    response = await fetch(`${API_BASE_URL}/api${url}`, {
       ...options,
       headers,
       credentials: 'include',
